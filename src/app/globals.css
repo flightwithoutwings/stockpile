@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 12%; /* Dark Grey for item display area */
+    --foreground: 0 0% 90%; /* Light Gray */
+
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 90%;
+
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 90%;
+
+    --primary: 180 100% 35%; /* Slightly lighter Teal for dark mode */
+    --primary-foreground: 0 0% 10%; /* Dark text on lighter teal */
+
+    --secondary: 0 0% 20%; /* Lighter Dark Grey (used for footer) */
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 39 100% 60%; /* Lighter Orange */
+    --accent-foreground: 0 0% 10%; /* Dark text on orange */
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 90%;
+
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: 180 100% 35%;
+    
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+
+    /* Sidebar specific colors - dark mode */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* This .dark theme can be further customized if needed, 
+       or removed if the default dark theme is always sufficient. 
+       For now, it matches the new :root. */
+    --background: 0 0% 12%; 
+    --foreground: 0 0% 90%; 
+
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 90%;
+
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 90%;
+
+    --primary: 180 100% 35%; 
+    --primary-foreground: 0 0% 10%; 
+
+    --secondary: 0 0% 20%; 
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 39 100% 60%; 
+    --accent-foreground: 0 0% 10%; 
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 90%;
+
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: 180 100% 35%;
+    
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    /* Sidebar specific colors - dark mode */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
