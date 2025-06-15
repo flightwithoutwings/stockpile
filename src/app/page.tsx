@@ -192,7 +192,7 @@ export default function HomePage() {
     if (file.type !== 'application/json') {
       toast({
         title: "Invalid File Type",
-        description: "Please select a valid JSON file (.json) to import an item.",
+        description: "Please select a valid JSON file (.json) to import item(s).",
         variant: "destructive",
       });
       return;
@@ -200,6 +200,9 @@ export default function HomePage() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
+      let successfullyImportedCount = 0;
+      let failedImportCount = 0;
+
       try {
         const text = e.target?.result;
         if (typeof text !== 'string') {
@@ -207,43 +210,77 @@ export default function HomePage() {
         }
         const jsonData = JSON.parse(text);
 
-        if (typeof jsonData !== 'object' || jsonData === null || Array.isArray(jsonData)) {
-          throw new Error("JSON file must contain a single object representing the item.");
-        }
-        
-        const mappedItem: InventoryItemFormValues = {
-          title: String(jsonData.title || jsonData.name || ''),
-          author: String(jsonData.author || jsonData.authors || ''),
-          year: jsonData.year ? Number(jsonData.year) : (jsonData.publicationYear ? Number(jsonData.publicationYear) : undefined),
-          description: String(jsonData.description || jsonData.summary || jsonData.notes || ''),
-          imageUrl: String(jsonData.imageUrl || jsonData.image || jsonData.coverImage || jsonData.cover || ''),
-          tags: Array.isArray(jsonData.tags) ? jsonData.tags.map(String) : (typeof jsonData.tags === 'string' ? jsonData.tags.split(',').map(t => t.trim()) : []),
-          originalFileFormats: [], // Defaulting, as these are less common in generic JSON
-          originalName: '',
-          isOriginalNameNA: true,
-          calibredStatus: 'no',
+        const processJsonObject = (itemJson: any): boolean => {
+          if (typeof itemJson !== 'object' || itemJson === null) {
+            console.error("Invalid item format in JSON array:", itemJson);
+            return false;
+          }
+          
+          const mappedItem: InventoryItemFormValues = {
+            title: String(itemJson.title || itemJson.name || ''),
+            author: String(itemJson.author || itemJson.authors || ''),
+            year: itemJson.year ? Number(itemJson.year) : (itemJson.publicationYear ? Number(itemJson.publicationYear) : undefined),
+            description: String(itemJson.description || itemJson.summary || itemJson.notes || ''),
+            imageUrl: String(itemJson.imageUrl || itemJson.image || itemJson.coverImage || itemJson.cover || ''),
+            tags: Array.isArray(itemJson.tags) ? itemJson.tags.map(String) : (typeof itemJson.tags === 'string' ? itemJson.tags.split(',').map(t => t.trim()) : []),
+            originalFileFormats: Array.isArray(itemJson.originalFileFormats) ? itemJson.originalFileFormats.map(String) : [],
+            originalName: itemJson.isOriginalNameNA ? 'N/A' : String(itemJson.originalName || ''),
+            isOriginalNameNA: typeof itemJson.isOriginalNameNA === 'boolean' ? itemJson.isOriginalNameNA : false,
+            calibredStatus: ['yes', 'no', 'na'].includes(itemJson.calibredStatus) ? itemJson.calibredStatus : 'no',
+          };
+
+          if (!mappedItem.title) {
+            console.error("JSON object must have a 'title' or 'name' field:", itemJson);
+            return false;
+          }
+
+          if (mappedItem.author === 'undefined' || mappedItem.author === 'null') mappedItem.author = '';
+          if (mappedItem.description === 'undefined' || mappedItem.description === 'null') mappedItem.description = '';
+          if (mappedItem.imageUrl === 'undefined' || mappedItem.imageUrl === 'null') mappedItem.imageUrl = '';
+
+          addItem(mappedItem);
+          return true;
         };
 
-        if (!mappedItem.title) {
-          throw new Error("JSON object must have a 'title' or 'name' field.");
+        if (Array.isArray(jsonData)) {
+          jsonData.forEach(itemJson => {
+            if (processJsonObject(itemJson)) {
+              successfullyImportedCount++;
+            } else {
+              failedImportCount++;
+            }
+          });
+        } else if (typeof jsonData === 'object' && jsonData !== null) {
+          if (processJsonObject(jsonData)) {
+            successfullyImportedCount++;
+          } else {
+            failedImportCount++;
+          }
+        } else {
+          throw new Error("JSON file must contain a single object or an array of objects representing items.");
         }
 
-        // Ensure optional fields are truly optional or default
-        if (mappedItem.author === 'undefined' || mappedItem.author === 'null') mappedItem.author = '';
-        if (mappedItem.description === 'undefined' || mappedItem.description === 'null') mappedItem.description = '';
-        if (mappedItem.imageUrl === 'undefined' || mappedItem.imageUrl === 'null') mappedItem.imageUrl = '';
-
-
-        addItem(mappedItem);
-        toast({
-          title: "Item Imported",
-          description: `"${mappedItem.title}" has been successfully imported from JSON.`,
-        });
+        if (successfullyImportedCount > 0 && failedImportCount === 0) {
+          toast({
+            title: successfullyImportedCount === 1 ? "Item Imported" : "Items Imported",
+            description: `${successfullyImportedCount} item(s) successfully imported from JSON.`,
+          });
+        } else if (successfullyImportedCount > 0 && failedImportCount > 0) {
+          toast({
+            title: "Partial Import Success",
+            description: `${successfullyImportedCount} item(s) imported, ${failedImportCount} item(s) failed. Check console for details.`,
+            variant: "default", 
+          });
+        } else if (failedImportCount > 0) {
+           throw new Error(`All ${failedImportCount} item(s) failed to import. Check console for details.`);
+        } else {
+           throw new Error("No items found or processed in the JSON file.");
+        }
 
       } catch (error: any) {
         toast({
           title: "JSON Import Failed",
-          description: error.message || "Could not import item from the JSON file.",
+          description: error.message || "Could not import item(s) from the JSON file.",
           variant: "destructive",
         });
       } finally {
@@ -274,12 +311,9 @@ export default function HomePage() {
          const editingFormatsString = JSON.stringify(editingItem.originalFileFormats?.slice().sort() || []);
         
         if (currentFormatsString !== editingFormatsString) {
-           // If formats are different, update editingItem to reflect the latest from the list
-           // This keeps the form in sync if a universal format was deleted impacting this item
           setEditingItem(currentVersionInList);
         }
       } else {
-        // Item being edited was deleted from the main list, close form.
         setEditingItem(null);
         setIsFormOpen(false); 
       }
@@ -405,3 +439,6 @@ export default function HomePage() {
     </div>
   );
 }
+
+
+    
