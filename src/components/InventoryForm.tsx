@@ -327,7 +327,13 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                           <FormItem>
                             <FormLabel>Year (Optional)</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 2023" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}/>
+                              <Input
+                                type="number"
+                                placeholder="e.g., 2023"
+                                {...field}
+                                value={(field.value === undefined || isNaN(field.value as number)) ? '' : field.value}
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -514,7 +520,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                                     const currentStatus = form.watch('calibredStatus');
                                     if (checked) {
                                       form.setValue('calibredStatus', 'yes', { shouldValidate: true });
-                                    } else if (currentStatus === 'yes') { // Only change to 'no' if 'yes' was the one unchecked
+                                    } else if (currentStatus === 'yes') { 
                                       form.setValue('calibredStatus', 'no', { shouldValidate: true });
                                     }
                                   }}
@@ -539,7 +545,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                                     const currentStatus = form.watch('calibredStatus');
                                     if (checked) {
                                       form.setValue('calibredStatus', 'na', { shouldValidate: true });
-                                    } else if (currentStatus === 'na') { // Only change to 'no' if 'na' was the one unchecked
+                                    } else if (currentStatus === 'na') { 
                                        form.setValue('calibredStatus', 'no', { shouldValidate: true });
                                     }
                                   }}
@@ -643,3 +649,4 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 };
 
 export default InventoryForm;
+
