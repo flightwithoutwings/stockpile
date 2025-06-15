@@ -70,6 +70,31 @@ const initialMockData: InventoryItem[] = [
   },
 ];
 
+const sanitizeRawItem = (rawItem: any): InventoryItem => {
+  let originalName = '';
+  if (rawItem.isOriginalNameNA) {
+    originalName = 'N/A';
+  } else if (typeof rawItem.originalName === 'string') {
+    originalName = rawItem.originalName;
+  }
+
+  return {
+    id: rawItem.id || crypto.randomUUID(),
+    title: rawItem.title || 'Untitled',
+    author: rawItem.author || '',
+    year: rawItem.year === null ? undefined : (typeof rawItem.year === 'number' ? rawItem.year : undefined),
+    description: rawItem.description || '',
+    imageUrl: typeof rawItem.imageUrl === 'string' ? rawItem.imageUrl : '',
+    tags: Array.isArray(rawItem.tags) ? rawItem.tags.map(t => String(t).toLowerCase()) : [],
+    createdAt: rawItem.createdAt ? new Date(rawItem.createdAt) : new Date(),
+    updatedAt: rawItem.updatedAt ? new Date(rawItem.updatedAt) : new Date(),
+    originalFileFormats: Array.isArray(rawItem.originalFileFormats) ? rawItem.originalFileFormats.map(f => String(f)) : [],
+    originalName: originalName,
+    isOriginalNameNA: typeof rawItem.isOriginalNameNA === 'boolean' ? rawItem.isOriginalNameNA : false,
+    calibredStatus: ['yes', 'no', 'na'].includes(rawItem.calibredStatus) ? rawItem.calibredStatus : 'no',
+  };
+};
+
 
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -86,30 +111,11 @@ export function useInventory() {
 
       if (storedItemsJson) {
         const parsedItems = JSON.parse(storedItemsJson) as any[];
-        currentItems = parsedItems.map(item => ({
-          ...item,
-          imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : '',
-          tags: Array.isArray(item.tags) ? item.tags.map(t => String(t).toLowerCase()) : [],
-          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-          updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
-          originalFileFormats: Array.isArray(item.originalFileFormats) ? item.originalFileFormats.map(f => String(f)) : [],
-          originalName: typeof item.originalName === 'string' ? item.originalName : (item.isOriginalNameNA ? 'N/A' : ''),
-          isOriginalNameNA: typeof item.isOriginalNameNA === 'boolean' ? item.isOriginalNameNA : false,
-          calibredStatus: ['yes', 'no', 'na'].includes(item.calibredStatus) ? item.calibredStatus : 'no',
-        }));
-        setItems(currentItems);
+        currentItems = parsedItems.map(sanitizeRawItem);
       } else {
-        currentItems = initialMockData.map(item => ({
-            ...item,
-            imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : '',
-            tags: Array.isArray(item.tags) ? item.tags.map(t => String(t).toLowerCase()) : [],
-            originalFileFormats: Array.isArray(item.originalFileFormats) ? item.originalFileFormats.map(f => String(f)) : [],
-            originalName: typeof item.originalName === 'string' ? item.originalName : (item.isOriginalNameNA ? 'N/A' : ''),
-            isOriginalNameNA: typeof item.isOriginalNameNA === 'boolean' ? item.isOriginalNameNA : false,
-            calibredStatus: ['yes', 'no', 'na'].includes(item.calibredStatus) ? item.calibredStatus : 'no',
-        }));
-        setItems(currentItems);
+        currentItems = initialMockData.map(sanitizeRawItem);
       }
+      setItems(currentItems);
       
       currentItems.forEach(item => {
         if(Array.isArray(item.tags)) {
@@ -120,15 +126,7 @@ export function useInventory() {
 
     } catch (error) {
       console.error("Failed to load items from localStorage:", error);
-      const currentItems = initialMockData.map(item => ({
-        ...item,
-        imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : '',
-        tags: Array.isArray(item.tags) ? item.tags.map(t => String(t).toLowerCase()) : [],
-        originalFileFormats: Array.isArray(item.originalFileFormats) ? item.originalFileFormats.map(f => String(f)) : [],
-        originalName: typeof item.originalName === 'string' ? item.originalName : (item.isOriginalNameNA ? 'N/A' : ''),
-        isOriginalNameNA: typeof item.isOriginalNameNA === 'boolean' ? item.isOriginalNameNA : false,
-        calibredStatus: ['yes', 'no', 'na'].includes(item.calibredStatus) ? item.calibredStatus : 'no',
-      }));
+      const currentItems = initialMockData.map(sanitizeRawItem);
       setItems(currentItems);
       const newAllTags = new Set<string>();
        currentItems.forEach(item => {
@@ -165,9 +163,9 @@ export function useInventory() {
     const newItem: InventoryItem = {
       id: newItemId,
       title: formData.title,
-      author: formData.author,
+      author: formData.author || '',
       year: formData.year,
-      description: formData.description,
+      description: formData.description || '',
       imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : '',
       tags: (formData.tags || []).map(t => t.toLowerCase()),
       createdAt: new Date(),
@@ -185,12 +183,12 @@ export function useInventory() {
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id === itemId) {
-          const updatedItemData = {
+          const updatedItemData: InventoryItem = {
             ...item,
             title: formData.title,
-            author: formData.author,
+            author: formData.author || '',
             year: formData.year,
-            description: formData.description,
+            description: formData.description || '',
             imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : (item.imageUrl || ''),
             tags: (formData.tags || []).map(t => t.toLowerCase()),
             updatedAt: new Date(),
@@ -276,22 +274,7 @@ export function useInventory() {
             throw new Error("Invalid data format. Expected an array of inventory items.");
           }
 
-          const restoredItems: InventoryItem[] = parsedData.map((item: any) => ({
-            id: item.id || crypto.randomUUID(),
-            title: item.title,
-            author: item.author,
-            year: item.year,
-            description: item.description,
-            imageUrl: typeof item.imageUrl === 'string' ? item.imageUrl : '',
-            tags: Array.isArray(item.tags) ? item.tags.map(t => String(t).toLowerCase()) : [],
-            createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-            updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
-            originalFileFormats: Array.isArray(item.originalFileFormats) ? item.originalFileFormats.map(f => String(f)) : [],
-            originalName: typeof item.originalName === 'string' ? item.originalName : (item.isOriginalNameNA ? 'N/A' : ''),
-            isOriginalNameNA: typeof item.isOriginalNameNA === 'boolean' ? item.isOriginalNameNA : false,
-            calibredStatus: ['yes', 'no', 'na'].includes(item.calibredStatus) ? item.calibredStatus : 'no',
-          }));
-
+          const restoredItems: InventoryItem[] = parsedData.map(sanitizeRawItem);
           setItems(restoredItems);
 
           const newAllTags = new Set<string>();
