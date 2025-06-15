@@ -36,6 +36,7 @@ export default function HomePage() {
   const [fileToRestore, setFileToRestore] = useState<File | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const jsonImportFileInputRef = useRef<HTMLInputElement>(null);
   const [formCurrentPage, setFormCurrentPage] = useState(1);
 
   const [activeSearchPills, setActiveSearchPills] = useState<Set<string>>(new Set());
@@ -177,17 +178,108 @@ export default function HomePage() {
     }
   };
 
+  const handleImportJsonItemClick = () => {
+    if (jsonImportFileInputRef.current) {
+      jsonImportFileInputRef.current.value = '';
+      jsonImportFileInputRef.current.click();
+    }
+  };
+
+  const handleFileSelectedForJsonImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/json') {
+      toast({
+        title: "Invalid File Type",
+        description: "Please select a valid JSON file (.json) to import an item.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result;
+        if (typeof text !== 'string') {
+          throw new Error("Failed to read file content.");
+        }
+        const jsonData = JSON.parse(text);
+
+        if (typeof jsonData !== 'object' || jsonData === null || Array.isArray(jsonData)) {
+          throw new Error("JSON file must contain a single object representing the item.");
+        }
+        
+        const mappedItem: InventoryItemFormValues = {
+          title: String(jsonData.title || jsonData.name || ''),
+          author: String(jsonData.author || jsonData.authors || ''),
+          year: jsonData.year ? Number(jsonData.year) : (jsonData.publicationYear ? Number(jsonData.publicationYear) : undefined),
+          description: String(jsonData.description || jsonData.summary || jsonData.notes || ''),
+          imageUrl: String(jsonData.imageUrl || jsonData.image || jsonData.coverImage || jsonData.cover || ''),
+          tags: Array.isArray(jsonData.tags) ? jsonData.tags.map(String) : (typeof jsonData.tags === 'string' ? jsonData.tags.split(',').map(t => t.trim()) : []),
+          originalFileFormats: [], // Defaulting, as these are less common in generic JSON
+          originalName: '',
+          isOriginalNameNA: true,
+          calibredStatus: 'no',
+        };
+
+        if (!mappedItem.title) {
+          throw new Error("JSON object must have a 'title' or 'name' field.");
+        }
+
+        // Ensure optional fields are truly optional or default
+        if (mappedItem.author === 'undefined' || mappedItem.author === 'null') mappedItem.author = '';
+        if (mappedItem.description === 'undefined' || mappedItem.description === 'null') mappedItem.description = '';
+        if (mappedItem.imageUrl === 'undefined' || mappedItem.imageUrl === 'null') mappedItem.imageUrl = '';
+
+
+        addItem(mappedItem);
+        toast({
+          title: "Item Imported",
+          description: `"${mappedItem.title}" has been successfully imported from JSON.`,
+        });
+
+      } catch (error: any) {
+        toast({
+          title: "JSON Import Failed",
+          description: error.message || "Could not import item from the JSON file.",
+          variant: "destructive",
+        });
+      } finally {
+        if (jsonImportFileInputRef.current) {
+          jsonImportFileInputRef.current.value = ''; 
+        }
+      }
+    };
+    reader.onerror = () => {
+       toast({
+        title: "File Read Error",
+        description: "Could not read the selected file.",
+        variant: "destructive",
+      });
+      if (jsonImportFileInputRef.current) {
+        jsonImportFileInputRef.current.value = '';
+      }
+    };
+    reader.readAsText(file);
+  };
+
+
   useEffect(() => {
     if (editingItem && isFormOpen) {
       const currentVersionInList = inventoryItems.find(i => i.id === editingItem.id);
       if (currentVersionInList) {
-        const currentFormatsString = JSON.stringify(currentVersionInList.originalFileFormats?.slice().sort() || []);
-        const editingFormatsString = JSON.stringify(editingItem.originalFileFormats?.slice().sort() || []);
+         const currentFormatsString = JSON.stringify(currentVersionInList.originalFileFormats?.slice().sort() || []);
+         const editingFormatsString = JSON.stringify(editingItem.originalFileFormats?.slice().sort() || []);
         
         if (currentFormatsString !== editingFormatsString) {
+           // If formats are different, update editingItem to reflect the latest from the list
+           // This keeps the form in sync if a universal format was deleted impacting this item
           setEditingItem(currentVersionInList);
         }
       } else {
+        // Item being edited was deleted from the main list, close form.
         setEditingItem(null);
         setIsFormOpen(false); 
       }
@@ -204,6 +296,7 @@ export default function HomePage() {
           toast({ title: "Backup Initiated", description: "Your library data is being downloaded." });
         }}
         onRestoreClick={handleRestoreClick}
+        onImportJsonItemClick={handleImportJsonItemClick}
       />
       <main className="flex-grow container mx-auto px-4 py-6">
         <div className="mb-6 relative">
@@ -247,6 +340,13 @@ export default function HomePage() {
         type="file"
         ref={fileInputRef}
         onChange={handleFileSelectedForRestore}
+        accept=".json"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={jsonImportFileInputRef}
+        onChange={handleFileSelectedForJsonImport}
         accept=".json"
         className="hidden"
       />
