@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const inventoryItemSchema = z.object({
   title: z.string().min(1, "Title is required").max(150, "Title must be 150 characters or less"),
-  author: z.string().max(100, "Author must be 100 characters or less").optional(),
+  author: z.string().max(250, "Author must be 250 characters or less").optional(),
   year: z.coerce.number().int("Year must be a whole number").min(0, "Year must be a positive number").max(new Date().getFullYear() + 5, "Year seems too far in the future").optional(),
   description: z.string().max(1000, "Description must be 1000 characters or less").optional(),
   imageUrl: z.string().optional().or(z.literal('')), // Allow empty string or valid (data)URL
@@ -15,3 +15,4 @@ export const inventoryItemSchema = z.object({
 });
 
 export type InventoryItemFormValues = z.infer<typeof inventoryItemSchema>;
+
