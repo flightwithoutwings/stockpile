@@ -71,26 +71,30 @@ const initialMockData: InventoryItem[] = [
 ];
 
 const sanitizeRawItem = (rawItem: any): InventoryItem => {
-  let originalName = '';
-  if (rawItem.isOriginalNameNA) {
-    originalName = 'N/A';
-  } else if (typeof rawItem.originalName === 'string') {
-    originalName = rawItem.originalName;
+  const isOriginalNameTrulyNA = typeof rawItem.isOriginalNameNA === 'boolean' ? rawItem.isOriginalNameNA : false;
+  
+  let originalNameValue = '';
+  if (isOriginalNameTrulyNA) {
+    originalNameValue = 'N/A';
+  } else {
+    originalNameValue = typeof rawItem.originalName === 'string' ? rawItem.originalName : '';
   }
 
+  const yearValue = (typeof rawItem.year === 'number' && !isNaN(rawItem.year)) ? rawItem.year : undefined;
+
   return {
-    id: rawItem.id || crypto.randomUUID(),
-    title: rawItem.title || 'Untitled',
-    author: rawItem.author || '',
-    year: rawItem.year === null ? undefined : (typeof rawItem.year === 'number' ? rawItem.year : undefined),
-    description: rawItem.description || '',
+    id: (typeof rawItem.id === 'string' && rawItem.id) ? rawItem.id : crypto.randomUUID(),
+    title: (typeof rawItem.title === 'string' && rawItem.title.trim()) ? rawItem.title : 'Untitled',
+    author: typeof rawItem.author === 'string' ? rawItem.author : '',
+    year: yearValue,
+    description: typeof rawItem.description === 'string' ? rawItem.description : '',
     imageUrl: typeof rawItem.imageUrl === 'string' ? rawItem.imageUrl : '',
     tags: Array.isArray(rawItem.tags) ? rawItem.tags.map(t => String(t).toLowerCase()) : [],
     createdAt: rawItem.createdAt ? new Date(rawItem.createdAt) : new Date(),
     updatedAt: rawItem.updatedAt ? new Date(rawItem.updatedAt) : new Date(),
     originalFileFormats: Array.isArray(rawItem.originalFileFormats) ? rawItem.originalFileFormats.map(f => String(f)) : [],
-    originalName: originalName,
-    isOriginalNameNA: typeof rawItem.isOriginalNameNA === 'boolean' ? rawItem.isOriginalNameNA : false,
+    originalName: originalNameValue,
+    isOriginalNameNA: isOriginalNameTrulyNA,
     calibredStatus: ['yes', 'no', 'na'].includes(rawItem.calibredStatus) ? rawItem.calibredStatus : 'no',
   };
 };
@@ -164,14 +168,14 @@ export function useInventory() {
       id: newItemId,
       title: formData.title,
       author: formData.author || '',
-      year: formData.year,
+      year: formData.year, // Will be undefined if not provided, as per schema
       description: formData.description || '',
       imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : '',
       tags: (formData.tags || []).map(t => t.toLowerCase()),
       createdAt: new Date(),
       updatedAt: new Date(),
       originalFileFormats: formData.originalFileFormats || [],
-      originalName: formData.isOriginalNameNA ? 'N/A' : formData.originalName || '',
+      originalName: formData.isOriginalNameNA ? 'N/A' : (formData.originalName || ''),
       isOriginalNameNA: formData.isOriginalNameNA || false,
       calibredStatus: formData.calibredStatus || 'no',
     };
@@ -193,7 +197,7 @@ export function useInventory() {
             tags: (formData.tags || []).map(t => t.toLowerCase()),
             updatedAt: new Date(),
             originalFileFormats: formData.originalFileFormats || [],
-            originalName: formData.isOriginalNameNA ? 'N/A' : formData.originalName || '',
+            originalName: formData.isOriginalNameNA ? 'N/A' : (formData.originalName || ''),
             isOriginalNameNA: formData.isOriginalNameNA || false,
             calibredStatus: formData.calibredStatus || 'no',
           };
@@ -323,3 +327,4 @@ export function useInventory() {
     },
   };
 }
+
