@@ -215,11 +215,26 @@ export default function HomePage() {
             console.error("Invalid item format in JSON array:", itemJson);
             return false;
           }
+
+          const getYear = (value: any): number | undefined => {
+            if (!value) return undefined;
+            if (typeof value === 'number' && !isNaN(value)) return value;
+            if (typeof value === 'string') {
+                const yearAsNum = Number(value);
+                if (!isNaN(yearAsNum) && value.length === 4) return yearAsNum;
+
+                const date = new Date(value);
+                if (!isNaN(date.getTime())) {
+                    return date.getFullYear();
+                }
+            }
+            return undefined;
+          };
           
           const mappedItem: InventoryItemFormValues = {
             title: String(itemJson.title || itemJson.name || ''),
             author: String(itemJson.author || itemJson.authors || ''),
-            year: itemJson.year ? Number(itemJson.year) : (itemJson.publicationYear ? Number(itemJson.publicationYear) : undefined),
+            year: getYear(itemJson.year || itemJson.publicationYear || itemJson.publicationDate),
             description: String(itemJson.description || itemJson.summary || itemJson.notes || ''),
             imageUrl: String(itemJson.imageUrl || itemJson.image || itemJson.coverImage || itemJson.cover || ''),
             tags: Array.isArray(itemJson.tags) ? itemJson.tags.map(String) : (typeof itemJson.tags === 'string' ? itemJson.tags.split(',').map(t => t.trim()) : []),
@@ -440,5 +455,7 @@ export default function HomePage() {
   );
 }
 
+
+    
 
     
