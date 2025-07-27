@@ -3,7 +3,7 @@ export type InventoryItem = {
   id: string;
   title: string;
   author?: string;
-  year?: number;
+  publicationDate?: Date;
   description?: string;
   imageUrl?: string;
   tags: string[];

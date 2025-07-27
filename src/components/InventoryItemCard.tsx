@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Pencil, Trash2, ImageIcon } from 'lucide-react'; // Added ImageIcon
 import type { InventoryItem } from '@/lib/types';
+import { format } from 'date-fns';
 
 interface InventoryItemCardProps {
   item: InventoryItem;
@@ -92,9 +93,9 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
               {item.author}
             </p>
           )}
-           {item.year && (
+           {item.publicationDate && (
             <p className="text-xs text-muted-foreground">
-              {item.year}
+              {format(item.publicationDate, "PPP")}
             </p>
           )}
         </div>

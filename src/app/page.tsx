@@ -216,16 +216,13 @@ export default function HomePage() {
             return false;
           }
 
-          const getYear = (value: any): number | undefined => {
+          const getPublicationDate = (value: any): Date | undefined => {
             if (!value) return undefined;
-            if (typeof value === 'number' && !isNaN(value)) return value;
-            if (typeof value === 'string') {
-                const yearAsNum = Number(value);
-                if (!isNaN(yearAsNum) && value.length === 4) return yearAsNum;
-
+            if (value instanceof Date && !isNaN(value.getTime())) return value;
+            if (typeof value === 'string' || typeof value === 'number') {
                 const date = new Date(value);
                 if (!isNaN(date.getTime())) {
-                    return date.getFullYear();
+                    return date;
                 }
             }
             return undefined;
@@ -234,7 +231,7 @@ export default function HomePage() {
           const mappedItem: InventoryItemFormValues = {
             title: String(itemJson.title || itemJson.name || ''),
             author: String(itemJson.author || itemJson.authors || ''),
-            year: getYear(itemJson.year || itemJson.publicationYear || itemJson.publicationDate),
+            publicationDate: getPublicationDate(itemJson.publicationDate || itemJson.year || itemJson.publicationYear),
             description: String(itemJson.description || itemJson.summary || itemJson.notes || ''),
             imageUrl: String(itemJson.imageUrl || itemJson.image || itemJson.coverImage || itemJson.cover || ''),
             tags: Array.isArray(itemJson.tags) ? itemJson.tags.map(String) : (typeof itemJson.tags === 'string' ? itemJson.tags.split(',').map(t => t.trim()) : []),
@@ -454,8 +451,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-
-    
-
-    

@@ -12,7 +12,7 @@ const initialMockData: InventoryItem[] = [
     id: '1',
     title: 'The Legend of Korra: Patterns in Time',
     author: 'Michael Dante DiMartino, Bryan Konietzko',
-    year: 2023,
+    publicationDate: new Date('2023-07-18'),
     description: 'An anthology of standalone stories from The Legend of Korra.',
     imageUrl: 'https://placehold.co/200x300.png',
     tags: [],
@@ -27,7 +27,7 @@ const initialMockData: InventoryItem[] = [
     id: '2',
     title: 'Avatar: The Last Airbender – The Rift',
     author: 'Gene Luen Yang, Michael Dante DiMartino, Bryan Konietzko',
-    year: 2014,
+    publicationDate: new Date('2014-03-05'),
     description: 'Aang struggles with tradition and progress as he helps build Republic City.',
     imageUrl: 'https://m.media-amazon.com/images/I/81cVD2sCKtL._SL1500_.jpg',
     tags: [],
@@ -42,7 +42,7 @@ const initialMockData: InventoryItem[] = [
     id: '3',
     title: 'Avatar: The Last Airbender – The Search',
     author: 'Gene Luen Yang, Michael Dante DiMartino, Bryan Konietzko',
-    year: 2013,
+    publicationDate: new Date('2013-01-30'),
     description: 'Zuko searches for his mother, Ursa, with the help of Team Avatar.',
     imageUrl: 'https://placehold.co/200x300.png',
     tags: [],
@@ -57,7 +57,7 @@ const initialMockData: InventoryItem[] = [
     id: '4',
     title: 'Avatar: The Last Airbender – The Promise',
     author: 'Gene Luen Yang, Michael Dante DiMartino, Bryan Konietzko',
-    year: 2012,
+    publicationDate: new Date('2012-01-25'),
     description: 'The Harmony Restoration Movement causes conflict between Aang and Zuko.',
     imageUrl: 'https://placehold.co/200x300.png',
     tags: [],
@@ -80,13 +80,14 @@ const sanitizeRawItem = (rawItem: any): InventoryItem => {
     originalNameValue = typeof rawItem.originalName === 'string' ? rawItem.originalName : '';
   }
 
-  const yearValue = (typeof rawItem.year === 'number' && !isNaN(rawItem.year)) ? rawItem.year : undefined;
+  const dateValue = rawItem.publicationDate ? new Date(rawItem.publicationDate) : undefined;
+  const publicationDateValue = (dateValue && !isNaN(dateValue.getTime())) ? dateValue : undefined;
 
   return {
     id: (typeof rawItem.id === 'string' && rawItem.id) ? rawItem.id : crypto.randomUUID(),
     title: (typeof rawItem.title === 'string' && rawItem.title.trim()) ? rawItem.title : 'Untitled',
     author: typeof rawItem.author === 'string' ? rawItem.author : '',
-    year: yearValue,
+    publicationDate: publicationDateValue,
     description: typeof rawItem.description === 'string' ? rawItem.description : '',
     imageUrl: typeof rawItem.imageUrl === 'string' ? rawItem.imageUrl : '',
     tags: Array.isArray(rawItem.tags) ? rawItem.tags.map(t => String(t).toLowerCase()) : [],
@@ -168,7 +169,7 @@ export function useInventory() {
       id: newItemId,
       title: formData.title,
       author: formData.author || '',
-      year: formData.year, // Will be undefined if not provided, as per schema
+      publicationDate: formData.publicationDate,
       description: formData.description || '',
       imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : '',
       tags: (formData.tags || []).map(t => t.toLowerCase()),
@@ -191,7 +192,7 @@ export function useInventory() {
             ...item,
             title: formData.title,
             author: formData.author || '',
-            year: formData.year,
+            publicationDate: formData.publicationDate,
             description: formData.description || '',
             imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : (item.imageUrl || ''),
             tags: (formData.tags || []).map(t => t.toLowerCase()),
@@ -222,12 +223,13 @@ export function useInventory() {
       const searchKeywords = trimmedSearchTerm.split(' ').filter(term => term.trim() !== '');
       if (searchKeywords.length > 0) {
         filtered = items.filter((item) => {
+          const itemYear = item.publicationDate ? item.publicationDate.getFullYear().toString() : '';
           return searchKeywords.every(keyword =>
             (item.tags && item.tags.some((tag) => tag.toLowerCase().includes(keyword))) ||
             item.title.toLowerCase().includes(keyword) ||
             (item.author && item.author.toLowerCase().includes(keyword)) ||
             (item.description && item.description.toLowerCase().includes(keyword)) ||
-            (item.year && item.year.toString().includes(keyword))
+            (itemYear && itemYear.includes(keyword))
           );
         });
       }

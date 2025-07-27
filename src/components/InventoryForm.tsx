@@ -17,8 +17,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, UploadCloud, Trash2 } from 'lucide-react';
+import { PlusCircle, UploadCloud, Trash2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 
 interface InventoryFormProps {
@@ -58,7 +62,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       ? {
           title: initialData.title,
           author: initialData.author || '',
-          year: initialData.year,
+          publicationDate: initialData.publicationDate,
           description: initialData.description || '',
           imageUrl: initialData.imageUrl || '',
           tags: initialData.tags || [],
@@ -70,7 +74,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       : {
           title: '',
           author: '',
-          year: undefined,
+          publicationDate: undefined,
           description: '',
           imageUrl: '',
           tags: [],
@@ -106,7 +110,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           ? {
               title: initialData.title,
               author: initialData.author || '',
-              year: initialData.year,
+              publicationDate: initialData.publicationDate,
               description: initialData.description || '',
               imageUrl: initialData.imageUrl || '',
               tags: tags,
@@ -118,7 +122,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           : {
               title: '',
               author: '',
-              year: undefined,
+              publicationDate: undefined,
               description: '',
               imageUrl: '',
               tags: [],
@@ -216,7 +220,12 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 
 
   const handleSubmit = (values: InventoryItemFormValues) => {
-    const submissionData = { ...values, tags: currentTags };
+    const submissionData = {
+        ...values,
+        author: values.author || '',
+        description: values.description || '',
+        tags: currentTags
+    };
     onSubmit(submissionData, initialData?.id);
     toast({
       title: initialData ? "Item Updated" : "Item Added",
@@ -228,7 +237,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const nextPage = async () => {
     let isValid = true;
     if (currentPage === 1) {
-        isValid = await form.trigger(['title', 'author', 'year', 'description']);
+        isValid = await form.trigger(['title', 'author', 'publicationDate', 'description']);
     } else if (currentPage === 2) {
         isValid = await form.trigger(['imageUrl']);
     } else if (currentPage === 3) {
@@ -322,19 +331,41 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                       />
                       <FormField
                         control={form.control}
-                        name="year"
+                        name="publicationDate"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Year (Optional)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="e.g., 2023"
-                                {...field}
-                                value={(field.value === undefined || isNaN(field.value as number)) ? '' : field.value}
-                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-                              />
-                            </FormControl>
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Publication Date (Optional)</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "pl-3 text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, "PPP")
+                                    ) : (
+                                      <span>Pick a date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date("1900-01-01")
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -649,4 +680,3 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 };
 
 export default InventoryForm;
-
