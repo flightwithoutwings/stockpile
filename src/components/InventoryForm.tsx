@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 
 
 interface InventoryFormProps {
@@ -262,6 +263,11 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const prevPage = () => {
     onPageChange(prev => Math.max(prev - 1, 1));
   };
+  
+  const handleTabChange = (value: string) => {
+    const pageNumber = parseInt(value.replace('page', ''), 10);
+    onPageChange(pageNumber);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -270,36 +276,25 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle>{initialData ? 'Edit Item' : 'Add New Item'} (Page {currentPage}/{TOTAL_PAGES})</DialogTitle>
-          {currentPage === 1 && (
-            <DialogDescription>
-              Fill in the core details for the item.
-            </DialogDescription>
-          )}
-          {currentPage === 2 && (
-            <DialogDescription>
-              Upload or link an image for the item.
-            </DialogDescription>
-          )}
-          {currentPage === 3 && (
-            <DialogDescription>
-              Specify file format details and source information.
-            </DialogDescription>
-          )}
-          {currentPage === 4 && (
-            <DialogDescription>
-              Manage tags for the item.
-            </DialogDescription>
-          )}
+        <DialogHeader className="px-6 pt-6 pb-2 border-b">
+          <DialogTitle>{initialData ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+           <Tabs value={`page${currentPage}`} onValueChange={handleTabChange} className="w-full pt-2">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="page1">Details</TabsTrigger>
+              <TabsTrigger value="page2">Image</TabsTrigger>
+              <TabsTrigger value="page3">File Info</TabsTrigger>
+              <TabsTrigger value="page4">Tags</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </DialogHeader>
+
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 overflow-hidden"
           >
             <ScrollArea className="flex-1 px-6">
-              <div className="space-y-6 pb-6">
+              <div className="space-y-6 py-6">
                 {currentPage === 1 && (
                   <>
                     <FormField
