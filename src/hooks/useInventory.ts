@@ -15,7 +15,7 @@ const initialMockData: InventoryItem[] = [
     year: 2023,
     description: 'An anthology of standalone stories from The Legend of Korra.',
     imageUrl: 'https://placehold.co/200x300.png',
-    tags: ['comic', 'anthology', 'fantasy'],
+    tags: [],
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
     originalFileFormats: ['CBZ'],
@@ -30,7 +30,7 @@ const initialMockData: InventoryItem[] = [
     year: 2014,
     description: 'Aang struggles with tradition and progress as he helps build Republic City.',
     imageUrl: 'https://m.media-amazon.com/images/I/81cVD2sCKtL._SL1500_.jpg',
-    tags: ['comic', 'fantasy', 'adventure'],
+    tags: [],
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
     originalFileFormats: ['PDF', 'Folder'],
@@ -45,7 +45,7 @@ const initialMockData: InventoryItem[] = [
     year: 2013,
     description: 'Zuko searches for his mother, Ursa, with the help of Team Avatar.',
     imageUrl: 'https://placehold.co/200x300.png',
-    tags: ['comic', 'fantasy', 'mystery'],
+    tags: [],
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
     originalFileFormats: [],
@@ -60,7 +60,7 @@ const initialMockData: InventoryItem[] = [
     year: 2012,
     description: 'The Harmony Restoration Movement causes conflict between Aang and Zuko.',
     imageUrl: 'https://placehold.co/200x300.png',
-    tags: ['comic', 'fantasy', 'politics'],
+    tags: [],
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
     originalFileFormats: ['EPUB'],
@@ -327,4 +327,3 @@ export function useInventory() {
     },
   };
 }
-
