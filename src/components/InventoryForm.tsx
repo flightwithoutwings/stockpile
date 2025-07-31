@@ -67,7 +67,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           description: initialData.description || '',
           imageUrl: initialData.imageUrl || '',
           tags: initialData.tags || [],
-          originalFileFormats: initialData.originalFileFormats || [],
+          originalFileFormats: initialData.originalFileFormats?.length ? initialData.originalFileFormats : [''],
           originalName: initialData.originalName || '',
           isOriginalNameNA: initialData.isOriginalNameNA || false,
           calibredStatus: initialData.calibredStatus || 'no',
@@ -79,7 +79,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           description: '',
           imageUrl: '',
           tags: [],
-          originalFileFormats: [],
+          originalFileFormats: [''],
           originalName: '',
           isOriginalNameNA: false,
           calibredStatus: 'no',
@@ -115,7 +115,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               description: initialData.description || '',
               imageUrl: initialData.imageUrl || '',
               tags: tags,
-              originalFileFormats: formats,
+              originalFileFormats: formats.length ? formats : [''],
               originalName: initialData.originalName || '',
               isOriginalNameNA: initialData.isOriginalNameNA || false,
               calibredStatus: initialData.calibredStatus || 'no',
@@ -127,7 +127,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               description: '',
               imageUrl: '',
               tags: [],
-              originalFileFormats: [],
+              originalFileFormats: [''],
               originalName: '',
               isOriginalNameNA: false,
               calibredStatus: 'no',
@@ -225,7 +225,8 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
         ...values,
         author: values.author || '',
         description: values.description || '',
-        tags: currentTags
+        tags: currentTags,
+        originalFileFormats: (values.originalFileFormats || []).filter(format => format && format.trim() !== '')
     };
     onSubmit(submissionData, initialData?.id);
     toast({
