@@ -278,7 +278,8 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       >
         <DialogHeader className="px-6 pt-6 pb-2 border-b">
           <DialogTitle className="truncate pr-8 flex items-baseline">
-            Edit Item: <span className="ml-2">{initialData ? initialData.title : ''}</span>
+            {initialData ? 'Edit Item:' : 'Add New Item'}
+            {initialData && <span className="ml-2 font-normal text-muted-foreground truncate">{initialData.title}</span>}
           </DialogTitle>
            <Tabs value={`page${currentPage}`} onValueChange={handleTabChange} className="w-full pt-2">
             <TabsList className="grid w-full grid-cols-4">
@@ -658,6 +659,9 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                   Previous
                 </Button>
               )}
+              {initialData && currentPage < TOTAL_PAGES && (
+                 <Button type="submit" variant="secondary">Save and Exit</Button>
+              )}
               {currentPage < TOTAL_PAGES && (
                 <Button type="button" onClick={nextPage} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   Next
@@ -665,7 +669,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               )}
               {currentPage === TOTAL_PAGES && (
                 <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {initialData ? 'Save Changes' : 'Add Item'}
+                  {initialData ? 'Save and Exit' : 'Add Item'}
                 </Button>
               )}
             </DialogFooter>
