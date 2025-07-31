@@ -272,7 +272,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
-        className="sm:max-w-lg md:max-w-2xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden"
+        className="sm:max-w-lg md:max-w-2xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden p-0"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
@@ -296,8 +296,8 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 overflow-hidden"
           >
-            <ScrollArea className="flex-1 px-6">
-              <div className="space-y-6 py-6">
+            <ScrollArea className="flex-1">
+              <div className="space-y-6 py-6 px-6">
                 {currentPage === 1 && (
                   <>
                     <FormField
