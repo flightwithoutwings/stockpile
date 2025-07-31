@@ -324,7 +324,7 @@ export default function HomePage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by title, author, description..."
+            placeholder="Search by title, author..."
             value={searchTerm}
             onChange={handleSearchInputChange}
             className="pl-10 w-full max-w-lg shadow-sm text-base"
