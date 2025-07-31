@@ -104,6 +104,7 @@ const sanitizeRawItem = (rawItem: any): InventoryItem => {
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
   const [allTagsSet, setAllTagsSet] = useState<Set<string>>(new Set());
 
@@ -216,30 +217,52 @@ export function useInventory() {
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
   }, []);
 
+  const toggleTagInFilter = useCallback((tagToToggle: string) => {
+    setActiveTags(prevActiveTags => {
+      const newActiveTags = new Set(prevActiveTags);
+      if (newActiveTags.has(tagToToggle)) {
+        newActiveTags.delete(tagToToggle);
+      } else {
+        newActiveTags.add(tagToToggle);
+      }
+      return newActiveTags;
+    });
+  }, []);
+
   const filteredAndSortedItems = useMemo(() => {
     let filtered = [...items];
+
+    // 1. Filter by active tags
+    if (activeTags.size > 0) {
+      filtered = filtered.filter(item => {
+        const itemTags = new Set(item.tags.map(t => t.toLowerCase()));
+        return Array.from(activeTags).every(activeTag => itemTags.has(activeTag));
+      });
+    }
+
+    // 2. Filter by search term within the already filtered list
     const trimmedSearchTerm = searchTerm.trim().toLowerCase();
     if (trimmedSearchTerm) {
       const searchKeywords = trimmedSearchTerm.split(' ').filter(term => term.trim() !== '');
       if (searchKeywords.length > 0) {
-        filtered = items.filter((item) => {
-          const itemYear = item.publicationDate ? item.publicationDate.getFullYear().toString() : '';
+        filtered = filtered.filter((item) => {
           return searchKeywords.every(keyword =>
-            (item.tags && item.tags.some((tag) => tag.toLowerCase().includes(keyword))) ||
             item.title.toLowerCase().includes(keyword) ||
             (item.author && item.author.toLowerCase().includes(keyword)) ||
-            (item.description && item.description.toLowerCase().includes(keyword)) ||
-            (itemYear && itemYear.includes(keyword))
+            (item.description && item.description.toLowerCase().includes(keyword))
           );
         });
       }
     }
+
+    // 3. Sort the final list
     return filtered.sort((a, b) => {
       const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
       const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
       return dateB - dateA;
     });
-  }, [items, searchTerm]);
+  }, [items, searchTerm, activeTags]);
+
 
   const backupData = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -353,6 +376,8 @@ export function useInventory() {
     deleteItem,
     searchTerm,
     setSearchTerm,
+    activeTags,
+    toggleTagInFilter,
     backupData,
     restoreData,
     isLoading: !isInitialized,

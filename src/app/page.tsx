@@ -24,6 +24,8 @@ export default function HomePage() {
     deleteItem,
     searchTerm,
     setSearchTerm,
+    activeTags,
+    toggleTagInFilter,
     backupData,
     restoreData,
     isLoading,
@@ -43,8 +45,6 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportFileInputRef = useRef<HTMLInputElement>(null);
   const [formCurrentPage, setFormCurrentPage] = useState(1);
-
-  const [activeSearchPills, setActiveSearchPills] = useState<Set<string>>(new Set());
 
   const handleAddItemClick = () => {
     setEditingItem(null);
@@ -94,41 +94,29 @@ export default function HomePage() {
   };
 
   const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const currentSearchText = event.target.value;
-    setSearchTerm(currentSearchText);
-
-    const termsInInput = currentSearchText.toLowerCase().split(' ').filter(t => t.trim() !== '');
-    const newActivePillsFromInput = new Set<string>();
-    allTags.forEach(tag => {
-      if (termsInInput.includes(tag)) {
-        newActivePillsFromInput.add(tag);
-      }
-    });
-    setActiveSearchPills(newActivePillsFromInput);
+    setSearchTerm(event.target.value);
   };
 
-  const handleTagPillClick = useCallback((tagToToggle: string) => {
-    const newActivePills = new Set(activeSearchPills);
-    if (newActivePills.has(tagToToggle)) {
-      newActivePills.delete(tagToToggle);
-    } else {
-      newActivePills.add(tagToToggle);
-    }
-    setActiveSearchPills(newActivePills);
-    setSearchTerm(Array.from(newActivePills).join(' '));
-  }, [activeSearchPills, setSearchTerm]);
-
+  const handleTagPillClick = (tagToToggle: string) => {
+    toggleTagInFilter(tagToToggle);
+  };
 
   useEffect(() => {
-    const termsInCurrentSearch = searchTerm.toLowerCase().split(' ').filter(t => t.trim() !== '');
-    const initialPills = new Set<string>();
-    allTags.forEach(tag => {
-      if (termsInCurrentSearch.includes(tag)) {
-        initialPills.add(tag);
+    if (editingItem && isFormOpen) {
+      const currentVersionInList = inventoryItems.find(i => i.id === editingItem.id);
+      if (currentVersionInList) {
+         const currentFormatsString = JSON.stringify(currentVersionInList.originalFileFormats?.slice().sort() || []);
+         const editingFormatsString = JSON.stringify(editingItem.originalFileFormats?.slice().sort() || []);
+        
+        if (currentFormatsString !== editingFormatsString) {
+          setEditingItem(currentVersionInList);
+        }
+      } else {
+        setEditingItem(null);
+        setIsFormOpen(false); 
       }
-    });
-    setActiveSearchPills(initialPills);
-  }, [searchTerm, allTags]);
+    }
+  }, [inventoryItems, editingItem, isFormOpen]);
 
 
   const handleRestoreClick = () => {
@@ -320,24 +308,6 @@ export default function HomePage() {
   };
 
 
-  useEffect(() => {
-    if (editingItem && isFormOpen) {
-      const currentVersionInList = inventoryItems.find(i => i.id === editingItem.id);
-      if (currentVersionInList) {
-         const currentFormatsString = JSON.stringify(currentVersionInList.originalFileFormats?.slice().sort() || []);
-         const editingFormatsString = JSON.stringify(editingItem.originalFileFormats?.slice().sort() || []);
-        
-        if (currentFormatsString !== editingFormatsString) {
-          setEditingItem(currentVersionInList);
-        }
-      } else {
-        setEditingItem(null);
-        setIsFormOpen(false); 
-      }
-    }
-  }, [inventoryItems, editingItem, isFormOpen]);
-
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <AppHeader
@@ -354,7 +324,7 @@ export default function HomePage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by title, author, tag, year or description..."
+            placeholder="Search by title, author, description..."
             value={searchTerm}
             onChange={handleSearchInputChange}
             className="pl-10 w-full max-w-lg shadow-sm text-base"
@@ -374,7 +344,7 @@ export default function HomePage() {
               {allTags.map(tag => (
                 <Badge
                   key={tag}
-                  variant={activeSearchPills.has(tag) ? 'default' : 'outline'}
+                  variant={activeTags.has(tag) ? 'default' : 'outline'}
                   className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
                   onClick={() => handleTagPillClick(tag)}
                 >
