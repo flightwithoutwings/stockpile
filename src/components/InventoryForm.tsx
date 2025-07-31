@@ -277,7 +277,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
         onDrop={handleDrop}
       >
         <DialogHeader className="px-6 pt-6 pb-2 border-b">
-          <DialogTitle>{initialData ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+          <DialogTitle className="truncate pr-8">{initialData ? `Edit Item: ${initialData.title}` : 'Add New Item'}</DialogTitle>
            <Tabs value={`page${currentPage}`} onValueChange={handleTabChange} className="w-full pt-2">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="page1">Details</TabsTrigger>
@@ -675,3 +675,5 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 };
 
 export default InventoryForm;
+
+    
