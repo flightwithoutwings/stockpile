@@ -6,6 +6,11 @@ import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
 
 const LOCAL_STORAGE_KEY = 'comicBookLibrary';
+const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
+
+
+type SortOption = 'createdAt' | 'title';
+type SortDirection = 'asc' | 'desc';
 
 const initialMockData: InventoryItem[] = [
   {
@@ -112,6 +117,8 @@ export function useInventory() {
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
   const [allTagsSet, setAllTagsSet] = useState<Set<string>>(new Set());
+  const [sortOption, setSortOption] = useState<SortOption>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
 
   useEffect(() => {
@@ -135,6 +142,13 @@ export function useInventory() {
       });
       setAllTagsSet(newAllTags);
 
+      const storedSortConfig = localStorage.getItem(SORT_CONFIG_KEY);
+      if (storedSortConfig) {
+        const { option, direction } = JSON.parse(storedSortConfig);
+        if (['createdAt', 'title'].includes(option)) setSortOption(option);
+        if (['asc', 'desc'].includes(direction)) setSortDirection(direction);
+      }
+
     } catch (error) {
       console.error("Failed to load items from localStorage:", error);
       const currentItems = initialMockData.map(sanitizeRawItem);
@@ -154,11 +168,12 @@ export function useInventory() {
     if (isInitialized) {
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+        localStorage.setItem(SORT_CONFIG_KEY, JSON.stringify({ option: sortOption, direction: sortDirection }));
       } catch (error) {
-        console.error("Failed to save items to localStorage:", error);
+        console.error("Failed to save to localStorage:", error);
       }
     }
-  }, [items, isInitialized]);
+  }, [items, sortOption, sortDirection, isInitialized]);
 
   const updateAllTagsInSet = useCallback((newTags: string[]) => {
     setAllTagsSet(prevAllTags => {
@@ -263,11 +278,17 @@ export function useInventory() {
 
     // 3. Sort the final list
     return filtered.sort((a, b) => {
-      const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
-      const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
-      return dateB - dateA;
+      let comparison = 0;
+      if (sortOption === 'title') {
+        comparison = a.title.localeCompare(b.title);
+      } else { // 'createdAt'
+        const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+        const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+        comparison = dateA - dateB;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [items, searchTerm, activeTags]);
+  }, [items, searchTerm, activeTags, sortOption, sortDirection]);
 
 
   const backupData = useCallback(() => {
@@ -391,5 +412,9 @@ export function useInventory() {
     addNewGlobalTag,
     updateGlobalTag,
     deleteGlobalTag,
+    sortOption,
+    setSortOption,
+    sortDirection,
+    setSortDirection,
   };
 }
