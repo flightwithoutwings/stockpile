@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 export default function HomePage() {
   const {
@@ -337,8 +338,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <h2 className="text-md font-semibold text-foreground whitespace-nowrap">Sort By:</h2>
             <div className="flex flex-wrap items-center gap-2">
               <Badge
@@ -358,25 +358,25 @@ export default function HomePage() {
                 Alphabetically
               </Badge>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={sortDirection === 'asc' ? 'secondary' : 'outline'}
-              className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
-              onClick={() => setSortDirection('asc')}
-            >
-              <ArrowUp className="mr-2 h-4 w-4" />
-              Ascending
-            </Badge>
-            <Badge
-              variant={sortDirection === 'desc' ? 'secondary' : 'outline'}
-              className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
-              onClick={() => setSortDirection('desc')}
-            >
-              <ArrowDown className="mr-2 h-4 w-4" />
-              Descending
-            </Badge>
-          </div>
+             <Separator orientation="vertical" className="h-6 mx-2 hidden sm:block" />
+             <div className="flex items-center gap-2">
+                <Badge
+                variant={sortDirection === 'asc' ? 'secondary' : 'outline'}
+                className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
+                onClick={() => setSortDirection('asc')}
+                >
+                <ArrowUp className="mr-2 h-4 w-4" />
+                Ascending
+                </Badge>
+                <Badge
+                variant={sortDirection === 'desc' ? 'secondary' : 'outline'}
+                className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
+                onClick={() => setSortDirection('desc')}
+                >
+                <ArrowDown className="mr-2 h-4 w-4" />
+                Descending
+                </Badge>
+            </div>
         </div>
 
         {allTags && allTags.length > 0 && (
@@ -488,4 +488,5 @@ export default function HomePage() {
       </footer>
     </div>
   );
-}
+
+    
