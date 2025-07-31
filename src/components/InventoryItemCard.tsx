@@ -86,7 +86,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
         </div>
       </CardHeader>
       <CardContent className="p-3 flex-grow flex flex-col">
-        <CardTitle className="text-md font-semibold mb-1 break-words" title={item.title}>{item.title}</CardTitle>
+        <CardTitle className="text-md font-semibold mb-1 break-words line-clamp-2" title={item.title}>{item.title}</CardTitle>
         <div className="mt-auto pt-1">
           {item.author && (
             <p className="text-xs text-muted-foreground truncate" title={item.author}>
