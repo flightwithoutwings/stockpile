@@ -248,8 +248,7 @@ export function useInventory() {
         filtered = filtered.filter((item) => {
           return searchKeywords.every(keyword =>
             item.title.toLowerCase().includes(keyword) ||
-            (item.author && item.author.toLowerCase().includes(keyword)) ||
-            (item.description && item.description.toLowerCase().includes(keyword))
+            (item.author && item.author.toLowerCase().includes(keyword))
           );
         });
       }
