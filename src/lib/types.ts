@@ -5,6 +5,7 @@ export type InventoryItem = {
   author?: string;
   publicationDate?: Date;
   description?: string;
+  notes?: string;
   imageUrl?: string;
   tags: string[];
   createdAt: Date;

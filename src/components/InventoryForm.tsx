@@ -37,7 +37,7 @@ interface InventoryFormProps {
   onPageChange: (page: number) => void;
 }
 
-const TOTAL_PAGES = 4;
+const TOTAL_PAGES = 5;
 
 const fixedFormatOptions = ["AZW3", "AZW", "EPUB", "KOBO", "MOBI", "OTHER"];
 
@@ -65,6 +65,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           author: initialData.author || '',
           publicationDate: initialData.publicationDate,
           description: initialData.description || '',
+          notes: initialData.notes || '',
           imageUrl: initialData.imageUrl || '',
           tags: initialData.tags || [],
           originalFileFormats: initialData.originalFileFormats?.length ? initialData.originalFileFormats : [''],
@@ -77,6 +78,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           author: '',
           publicationDate: undefined,
           description: '',
+          notes: '',
           imageUrl: '',
           tags: [],
           originalFileFormats: [''],
@@ -113,6 +115,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               author: initialData.author || '',
               publicationDate: initialData.publicationDate,
               description: initialData.description || '',
+              notes: initialData.notes || '',
               imageUrl: initialData.imageUrl || '',
               tags: tags,
               originalFileFormats: formats.length ? formats : [''],
@@ -125,6 +128,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               author: '',
               publicationDate: undefined,
               description: '',
+              notes: '',
               imageUrl: '',
               tags: [],
               originalFileFormats: [''],
@@ -225,6 +229,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
         ...values,
         author: values.author || '',
         description: values.description || '',
+        notes: values.notes || '',
         tags: currentTags,
         originalFileFormats: (values.originalFileFormats || []).filter(format => format && format.trim() !== '')
     };
@@ -246,6 +251,8 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
         isValid = await form.trigger(['originalFileFormats', 'originalName', 'isOriginalNameNA', 'calibredStatus']);
     } else if (currentPage === 4) {
         isValid = await form.trigger(['tags']);
+    } else if (currentPage === 5) {
+        isValid = await form.trigger(['notes']);
     }
 
     if (!isValid && currentPage < TOTAL_PAGES) {
@@ -282,18 +289,19 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
             {initialData ? (
               <span className="flex items-baseline">
                 <span className="font-normal">Edit Item:</span>
-                <span className="ml-2 truncate">{initialData.title}</span>
+                <span className="ml-2 font-bold truncate">{initialData.title}</span>
               </span>
             ) : (
               'Add New Item'
             )}
           </DialogTitle>
            <Tabs value={`page${currentPage}`} onValueChange={handleTabChange} className="w-full pt-2">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="page1">Details</TabsTrigger>
               <TabsTrigger value="page2">Image</TabsTrigger>
               <TabsTrigger value="page3">File Info</TabsTrigger>
               <TabsTrigger value="page4">Tags</TabsTrigger>
+              <TabsTrigger value="page5">Notes</TabsTrigger>
             </TabsList>
           </Tabs>
         </DialogHeader>
@@ -304,7 +312,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
             className="flex flex-col flex-1 overflow-hidden"
           >
             <ScrollArea className="flex-1">
-              <div className="space-y-6 py-6 px-6">
+              <div className="space-y-6 px-6 py-6">
                 {currentPage === 1 && (
                   <>
                     <FormField
@@ -383,7 +391,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                         <FormItem>
                           <FormLabel>Description (Optional)</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Brief summary or notes about the item" {...field} rows={4} />
+                            <Textarea placeholder="Brief summary about the item" {...field} rows={4} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -651,6 +659,24 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                         </div>
                       </FormItem>
                     )}
+                  </>
+                )}
+
+                {currentPage === 5 && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Add personal notes or reminders about this item..." {...field} rows={10} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </>
                 )}
               </div>

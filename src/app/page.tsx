@@ -225,7 +225,8 @@ export default function HomePage() {
             title: String(itemJson.title || itemJson.name || ''),
             author: String(itemJson.author || itemJson.authors || ''),
             publicationDate: getPublicationDate(itemJson.publicationDate || itemJson.year || itemJson.publicationYear),
-            description: String(itemJson.description || itemJson.summary || itemJson.notes || ''),
+            description: String(itemJson.description || itemJson.summary || ''),
+            notes: String(itemJson.notes || ''),
             imageUrl: String(itemJson.imageUrl || itemJson.image || itemJson.coverImage || itemJson.cover || ''),
             tags: Array.isArray(itemJson.tags) ? itemJson.tags.map(String) : (typeof itemJson.tags === 'string' ? itemJson.tags.split(',').map(t => t.trim()) : []),
             originalFileFormats: Array.isArray(itemJson.originalFileFormats) ? itemJson.originalFileFormats.map(String) : [],
@@ -241,6 +242,7 @@ export default function HomePage() {
 
           if (mappedItem.author === 'undefined' || mappedItem.author === 'null') mappedItem.author = '';
           if (mappedItem.description === 'undefined' || mappedItem.description === 'null') mappedItem.description = '';
+          if (mappedItem.notes === 'undefined' || mappedItem.notes === 'null') mappedItem.notes = '';
           if (mappedItem.imageUrl === 'undefined' || mappedItem.imageUrl === 'null') mappedItem.imageUrl = '';
 
           addItem(mappedItem);
