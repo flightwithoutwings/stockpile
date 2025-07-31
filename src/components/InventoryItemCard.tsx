@@ -45,11 +45,11 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
   };
 
   return (
-    <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group bg-background border-0">
+    <Card className="flex flex-col overflow-hidden transition-shadow duration-300 group bg-background border-0">
       <CardHeader className="p-0 relative">
-        <div className="aspect-[2/3] w-full relative cursor-pointer" onClick={() => onEdit(item)}>
+        <div className="aspect-[2/3] w-full relative cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg" onClick={() => onEdit(item)}>
           {imageError || !item.imageUrl ? (
-            <div className="aspect-[2/3] w-full bg-card rounded-t-lg flex items-center justify-center" data-ai-hint="blank image area">
+            <div className="aspect-[2/3] w-full bg-card rounded-lg flex items-center justify-center" data-ai-hint="blank image area">
               <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50" />
             </div>
           ) : (
@@ -58,7 +58,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
               alt={item.title}
               layout="fill"
               objectFit="cover"
-              className="transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
+              className="transition-transform duration-300 group-hover:scale-105 rounded-lg"
               data-ai-hint={getAiHint()}
               onError={handleImageError}
               unoptimized={item.imageUrl?.startsWith('data:')} // Add this if you expect data URIs and want to bypass Next.js optimization for them
