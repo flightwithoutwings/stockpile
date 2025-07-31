@@ -45,7 +45,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
   };
 
   return (
-    <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group">
+    <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group bg-background border-0">
       <CardHeader className="p-0 relative">
         <div className="aspect-[2/3] w-full relative cursor-pointer" onClick={() => onEdit(item)}>
           {imageError || !item.imageUrl ? (
@@ -58,7 +58,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
               alt={item.title}
               layout="fill"
               objectFit="cover"
-              className="transition-transform duration-300 group-hover:scale-105"
+              className="transition-transform duration-300 group-hover:scale-105 rounded-t-lg"
               data-ai-hint={getAiHint()}
               onError={handleImageError}
               unoptimized={item.imageUrl?.startsWith('data:')} // Add this if you expect data URIs and want to bypass Next.js optimization for them

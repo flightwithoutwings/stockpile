@@ -49,7 +49,7 @@ const InventoryGrid: React.FC<InventoryGridProps> = ({ items, onEditItem, onDele
 };
 
 const CardSkeleton: React.FC = () => (
-  <div className="flex flex-col rounded-lg border bg-card shadow-sm animate-pulse">
+  <div className="flex flex-col rounded-lg bg-background shadow-sm animate-pulse">
     <div className="aspect-[2/3] w-full bg-muted rounded-t-lg" />
     <div className="p-3 space-y-2">
       <div className="h-5 w-3/4 bg-muted rounded" />
