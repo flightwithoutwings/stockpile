@@ -47,7 +47,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group">
       <CardHeader className="p-0 relative">
-        <div className="aspect-[2/3] w-full relative">
+        <div className="aspect-[2/3] w-full relative cursor-pointer" onClick={() => onEdit(item)}>
           {imageError || !item.imageUrl ? (
             <div className="aspect-[2/3] w-full bg-card rounded-t-lg flex items-center justify-center" data-ai-hint="blank image area">
               <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50" />
