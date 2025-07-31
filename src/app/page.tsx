@@ -5,14 +5,16 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AppHeader from '@/components/AppHeader';
 import InventoryGrid from '@/components/InventoryGrid';
 import InventoryForm from '@/components/InventoryForm';
+import TagManager from '@/components/TagManager';
 import { Input } from '@/components/ui/input';
 import { useInventory } from '@/hooks/useInventory';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { Search } from 'lucide-react';
+import { Search, Tags } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   const {
@@ -27,9 +29,12 @@ export default function HomePage() {
     isLoading,
     allTags,
     addNewGlobalTag,
+    updateGlobalTag,
+    deleteGlobalTag,
   } = useInventory();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
@@ -358,7 +363,13 @@ export default function HomePage() {
 
         {allTags && allTags.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-3 text-foreground">Available Tags:</h2>
+            <div className="flex items-center gap-4 mb-3">
+              <h2 className="text-lg font-semibold text-foreground">Available Tags:</h2>
+              <Button variant="outline" size="sm" onClick={() => setIsTagManagerOpen(true)}>
+                <Tags className="mr-2 h-4 w-4" />
+                Manage Tags
+              </Button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {allTags.map(tag => (
                 <Badge
@@ -407,6 +418,15 @@ export default function HomePage() {
         onAddGlobalTag={addNewGlobalTag}
         currentPage={formCurrentPage}
         onPageChange={setFormCurrentPage}
+      />
+
+      <TagManager
+        isOpen={isTagManagerOpen}
+        onOpenChange={setIsTagManagerOpen}
+        allTags={allTags}
+        onAddTag={addNewGlobalTag}
+        onUpdateTag={updateGlobalTag}
+        onDeleteTag={deleteGlobalTag}
       />
 
       <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>

@@ -307,6 +307,45 @@ export function useInventory() {
 
   const allTagsArray = useMemo(() => Array.from(allTagsSet).sort(), [allTagsSet]);
 
+  const addNewGlobalTag = useCallback((tag: string) => {
+    if (tag.trim() !== '') {
+        setAllTagsSet(prev => {
+          const newSet = new Set(prev);
+          newSet.add(tag.toLowerCase());
+          return newSet;
+        });
+    }
+  }, []);
+
+  const updateGlobalTag = useCallback((oldTag: string, newTag: string) => {
+    const trimmedNewTag = newTag.trim().toLowerCase();
+    if (!trimmedNewTag || oldTag === trimmedNewTag) return;
+
+    setItems(prevItems => prevItems.map(item => ({
+      ...item,
+      tags: item.tags.map(t => t === oldTag ? trimmedNewTag : t)
+    })));
+
+    setAllTagsSet(prev => {
+      const newSet = new Set(Array.from(prev).map(t => t === oldTag ? trimmedNewTag : t));
+      return newSet;
+    });
+  }, []);
+
+  const deleteGlobalTag = useCallback((tagToDelete: string) => {
+    setItems(prevItems => prevItems.map(item => ({
+      ...item,
+      tags: item.tags.filter(t => t !== tagToDelete)
+    })));
+
+    setAllTagsSet(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(tagToDelete);
+      return newSet;
+    });
+  }, []);
+
+
   return {
     items: filteredAndSortedItems,
     addItem,
@@ -318,14 +357,8 @@ export function useInventory() {
     restoreData,
     isLoading: !isInitialized,
     allTags: allTagsArray,
-    addNewGlobalTag: (tag: string) => {
-        if (tag.trim() !== '') {
-            setAllTagsSet(prev => {
-              const newSet = new Set(prev);
-              newSet.add(tag.toLowerCase());
-              return newSet;
-            });
-        }
-    },
+    addNewGlobalTag,
+    updateGlobalTag,
+    deleteGlobalTag,
   };
 }
