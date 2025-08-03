@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useInventory } from '@/hooks/useInventory';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { Search, Tags, ArrowUp, ArrowDown, History, CaseSensitive } from 'lucide-react';
+import { Search, Tags, ArrowUp, ArrowDown, History, CaseSensitive, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -334,8 +334,18 @@ export default function HomePage() {
             placeholder="Search by title and/or author"
             value={searchTerm}
             onChange={handleSearchInputChange}
-            className="pl-10 w-full max-w-lg shadow-sm text-base"
+            className="pl-10 pr-10 w-full max-w-lg shadow-sm text-base"
           />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
 
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
@@ -507,3 +517,4 @@ export default function HomePage() {
     
 
     
+
