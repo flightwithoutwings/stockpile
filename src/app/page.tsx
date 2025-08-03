@@ -327,14 +327,14 @@ export default function HomePage() {
         onImportJsonItemClick={handleImportJsonItemClick}
       />
       <main className="flex-grow container mx-auto px-4 py-6">
-        <div className="mb-6 relative">
+        <div className="mb-6 relative w-full max-w-lg">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by title and/or author"
             value={searchTerm}
             onChange={handleSearchInputChange}
-            className="pl-10 pr-10 w-full max-w-lg shadow-sm text-base"
+            className="pl-10 pr-10 w-full shadow-sm text-base"
           />
           {searchTerm && (
             <Button
@@ -509,12 +509,4 @@ export default function HomePage() {
       </footer>
     </div>
   );
-
-    
-
-
-
-    
-
-    
-
+}
