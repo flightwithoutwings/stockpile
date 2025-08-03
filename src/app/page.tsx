@@ -340,8 +340,7 @@ export default function HomePage() {
 
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-baseline gap-2">
-                <h2 className="text-md font-semibold text-foreground whitespace-nowrap">Sort By:</h2>
-                {!isLoading && <span className="text-md font-semibold text-muted-foreground">({inventoryItems.length})</span>}
+                <h2 className="text-lg font-semibold text-foreground whitespace-nowrap">Sort By:</h2>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge
@@ -407,6 +406,13 @@ export default function HomePage() {
         )}
 
         <div className="border-t border-border pt-6">
+          {!isLoading && (
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-foreground">
+                ({inventoryItems.length}) {inventoryItems.length === 1 ? 'Item Found' : 'Items Found'}
+              </h2>
+            </div>
+          )}
           <InventoryGrid
             items={inventoryItems}
             onEditItem={handleEditItem}
@@ -496,3 +502,6 @@ export default function HomePage() {
 
     
 
+
+
+    
