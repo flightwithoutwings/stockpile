@@ -339,7 +339,10 @@ export default function HomePage() {
         </div>
 
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
-            <h2 className="text-md font-semibold text-foreground whitespace-nowrap">Sort By:</h2>
+            <div className="flex items-baseline gap-2">
+                <h2 className="text-md font-semibold text-foreground whitespace-nowrap">Sort By:</h2>
+                {!isLoading && <span className="text-md font-semibold text-muted-foreground">({inventoryItems.length})</span>}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant={sortOption === 'createdAt' ? 'default' : 'outline'}
@@ -404,11 +407,6 @@ export default function HomePage() {
         )}
 
         <div className="border-t border-border pt-6">
-          {!isLoading && (
-            <div className="mb-4 text-sm text-muted-foreground">
-              Showing {inventoryItems.length} item{inventoryItems.length !== 1 ? 's' : ''}.
-            </div>
-          )}
           <InventoryGrid
             items={inventoryItems}
             onEditItem={handleEditItem}
@@ -497,3 +495,4 @@ export default function HomePage() {
   );
 
     
+
