@@ -346,7 +346,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                         control={form.control}
                         name="publicationDate"
                         render={({ field }) => (
-                          <FormItem className="flex flex-col">
+                          <FormItem>
                             <FormLabel>Publication Date (Optional)</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
@@ -354,7 +354,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                                   <Button
                                     variant={"outline"}
                                     className={cn(
-                                      "pl-3 text-left font-normal",
+                                      "pl-3 text-left font-normal w-full",
                                       !field.value && "text-muted-foreground"
                                     )}
                                   >
