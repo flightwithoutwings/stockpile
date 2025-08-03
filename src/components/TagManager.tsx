@@ -150,7 +150,7 @@ const TagManager: React.FC<TagManagerProps> = ({ isOpen, onOpenChange, allTags, 
                 "{tagToDelete}" and remove it from all items in your library.
             </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
+            <AlertDialogFooter className="sm:justify-between">
             <AlertDialogCancel onClick={() => setTagToDelete(null)}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
                 Delete Tag
