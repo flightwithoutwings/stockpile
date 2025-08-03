@@ -409,7 +409,7 @@ export default function HomePage() {
           {!isLoading && (
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-foreground">
-                ({inventoryItems.length}) {inventoryItems.length === 1 ? 'Item Found' : 'Items Found'}
+                ({inventoryItems.length}) {inventoryItems.length === 1 ? 'Item' : 'Items'}
               </h2>
             </div>
           )}
@@ -503,5 +503,7 @@ export default function HomePage() {
     
 
 
+
+    
 
     
