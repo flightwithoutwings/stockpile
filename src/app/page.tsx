@@ -403,12 +403,19 @@ export default function HomePage() {
           </div>
         )}
 
-        <InventoryGrid
-          items={inventoryItems}
-          onEditItem={handleEditItem}
-          onDeleteItem={handleDeleteItemClick}
-          isLoading={isLoading}
-        />
+        <div className="border-t border-border pt-6">
+          {!isLoading && (
+            <div className="mb-4 text-sm text-muted-foreground">
+              Showing {inventoryItems.length} item{inventoryItems.length !== 1 ? 's' : ''}.
+            </div>
+          )}
+          <InventoryGrid
+            items={inventoryItems}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItemClick}
+            isLoading={isLoading}
+          />
+        </div>
       </main>
 
       <input
