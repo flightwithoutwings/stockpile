@@ -4,80 +4,12 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
+import { getAllItems, setItem, deleteItem, setImage, getImage, clearAllData } from '@/lib/storage';
 
-const LOCAL_STORAGE_KEY = 'comicBookLibrary';
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
-
 
 type SortOption = 'createdAt' | 'title';
 type SortDirection = 'asc' | 'desc';
-
-const initialMockData: InventoryItem[] = [
-  {
-    id: '1',
-    title: 'The Legend of Korra: Patterns in Time',
-    author: 'Michael Dante DiMartino, Bryan Konietzko',
-    publicationDate: new Date('2023-07-18'),
-    description: 'An anthology of standalone stories from The Legend of Korra.',
-    notes: 'A good read for fans of the series.',
-    imageUrl: 'https://placehold.co/200x300.png',
-    tags: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
-    originalFileFormats: ['CBZ'],
-    originalName: 'LoK_Patterns_in_Time.cbz',
-    isOriginalNameNA: false,
-    calibredStatus: 'yes',
-  },
-  {
-    id: '2',
-    title: 'Avatar: The Last Airbender – The Rift',
-    author: 'Gene Luen Yang, Michael Dante DiMartino, Bryan Konietzko',
-    publicationDate: new Date('2014-03-05'),
-    description: 'Aang struggles with tradition and progress as he helps build Republic City.',
-    notes: '',
-    imageUrl: 'https://m.media-amazon.com/images/I/81cVD2sCKtL._SL1500_.jpg',
-    tags: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
-    originalFileFormats: ['PDF', 'Folder'],
-    originalName: 'ATLA_The_Rift_Collection',
-    isOriginalNameNA: false,
-    calibredStatus: 'no',
-  },
-  {
-    id: '3',
-    title: 'Avatar: The Last Airbender – The Search',
-    author: 'Gene Luen Yang, Michael Dante DiMartino, Bryan Konietzko',
-    publicationDate: new Date('2013-01-30'),
-    description: 'Zuko searches for his mother, Ursa, with the help of Team Avatar.',
-    notes: 'A pivotal story in Zuko\'s arc.',
-    imageUrl: 'https://placehold.co/200x300.png',
-    tags: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-    originalFileFormats: [],
-    originalName: 'N/A',
-    isOriginalNameNA: true,
-    calibredStatus: 'yes',
-  },
-  {
-    id: '4',
-    title: 'Avatar: The Last Airbender – The Promise',
-    author: 'Gene Luen Yang, Michael Dante DiMartino, Bryan Konietzko',
-    publicationDate: new Date('2012-01-25'),
-    description: 'The Harmony Restoration Movement causes conflict between Aang and Zuko.',
-    notes: '',
-    imageUrl: 'https://placehold.co/200x300.png',
-    tags: [],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
-    originalFileFormats: ['EPUB'],
-    originalName: 'The Promise.epub',
-    isOriginalNameNA: false,
-    calibredStatus: 'no',
-  },
-];
 
 const sanitizeRawItem = (rawItem: any): InventoryItem => {
   const isOriginalNameTrulyNA = typeof rawItem.isOriginalNameNA === 'boolean' ? rawItem.isOriginalNameNA : false;
@@ -110,7 +42,6 @@ const sanitizeRawItem = (rawItem: any): InventoryItem => {
   };
 };
 
-
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -120,60 +51,59 @@ export function useInventory() {
   const [sortOption, setSortOption] = useState<SortOption>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-
   useEffect(() => {
-    try {
-      const storedItemsJson = localStorage.getItem(LOCAL_STORAGE_KEY);
-      let currentItems: InventoryItem[];
-      const newAllTags = new Set<string>();
-
-      if (storedItemsJson) {
-        const parsedItems = JSON.parse(storedItemsJson) as any[];
-        currentItems = parsedItems.map(sanitizeRawItem);
-      } else {
-        currentItems = initialMockData.map(sanitizeRawItem);
-      }
-      setItems(currentItems);
-      
-      currentItems.forEach(item => {
-        if(Array.isArray(item.tags)) {
-          item.tags.forEach(tag => newAllTags.add(tag));
+    const loadData = async () => {
+      try {
+        const storedItems = await getAllItems();
+        const currentItems = storedItems.map(sanitizeRawItem);
+        
+        // Fetch images for the items
+        for (const item of currentItems) {
+            if (item.imageUrl && item.imageUrl.startsWith('idb:')) {
+                const imageId = item.imageUrl.split(':')[1];
+                const imageDataUrl = await getImage(imageId);
+                if (imageDataUrl) {
+                    item.imageUrl = imageDataUrl;
+                }
+            }
         }
-      });
-      setAllTagsSet(newAllTags);
+        
+        setItems(currentItems);
 
-      const storedSortConfig = localStorage.getItem(SORT_CONFIG_KEY);
-      if (storedSortConfig) {
-        const { option, direction } = JSON.parse(storedSortConfig);
-        if (['createdAt', 'title'].includes(option)) setSortOption(option);
-        if (['asc', 'desc'].includes(direction)) setSortDirection(direction);
-      }
+        const newAllTags = new Set<string>();
+        currentItems.forEach(item => {
+          if(Array.isArray(item.tags)) {
+            item.tags.forEach(tag => newAllTags.add(tag));
+          }
+        });
+        setAllTagsSet(newAllTags);
 
-    } catch (error) {
-      console.error("Failed to load items from localStorage:", error);
-      const currentItems = initialMockData.map(sanitizeRawItem);
-      setItems(currentItems);
-      const newAllTags = new Set<string>();
-       currentItems.forEach(item => {
-        if(Array.isArray(item.tags)) {
-          item.tags.forEach(tag => newAllTags.add(tag));
+        const storedSortConfig = localStorage.getItem(SORT_CONFIG_KEY);
+        if (storedSortConfig) {
+          const { option, direction } = JSON.parse(storedSortConfig);
+          if (['createdAt', 'title'].includes(option)) setSortOption(option);
+          if (['asc', 'desc'].includes(direction)) setSortDirection(direction);
         }
-      });
-      setAllTagsSet(newAllTags);
-    }
-    setIsInitialized(true);
+
+      } catch (error) {
+        console.error("Failed to load items from IndexedDB:", error);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
     if (isInitialized) {
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+        // We no longer save all items to localStorage. setItem handles individual saves.
         localStorage.setItem(SORT_CONFIG_KEY, JSON.stringify({ option: sortOption, direction: sortDirection }));
       } catch (error) {
-        console.error("Failed to save to localStorage:", error);
+        console.error("Failed to save sort config to localStorage:", error);
       }
     }
-  }, [items, sortOption, sortDirection, isInitialized]);
+  }, [sortOption, sortDirection, isInitialized]);
 
   const updateAllTagsInSet = useCallback((newTags: string[]) => {
     setAllTagsSet(prevAllTags => {
@@ -182,10 +112,16 @@ export function useInventory() {
       return updatedTags;
     });
   }, []);
-  
 
-  const addItem = useCallback((formData: InventoryItemFormValues) => {
+  const addItem = useCallback(async (formData: InventoryItemFormValues) => {
     const newItemId = crypto.randomUUID();
+    let imageUrlToStore = typeof formData.imageUrl === 'string' ? formData.imageUrl : '';
+
+    if (imageUrlToStore.startsWith('data:image/')) {
+        await setImage(newItemId, imageUrlToStore);
+        // We keep the data URI in the state for immediate display, but it won't be persisted this way.
+    }
+
     const newItem: InventoryItem = {
       id: newItemId,
       title: formData.title,
@@ -193,7 +129,7 @@ export function useInventory() {
       publicationDate: formData.publicationDate,
       description: formData.description || '',
       notes: formData.notes || '',
-      imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : '',
+      imageUrl: imageUrlToStore,
       tags: (formData.tags || []).map(t => t.toLowerCase()),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -202,11 +138,28 @@ export function useInventory() {
       isOriginalNameNA: formData.isOriginalNameNA || false,
       calibredStatus: formData.calibredStatus || 'no',
     };
+    
+    // Create a version for IndexedDB with an image reference if needed.
+    const itemToPersist = { ...newItem };
+    if (imageUrlToStore.startsWith('data:image/')) {
+        itemToPersist.imageUrl = `idb:${newItemId}`;
+    }
+
+    await setItem(itemToPersist);
     setItems((prevItems) => [newItem, ...prevItems]);
     if (newItem.tags) updateAllTagsInSet(newItem.tags);
   }, [updateAllTagsInSet]);
 
-  const updateItem = useCallback((itemId: string, formData: InventoryItemFormValues) => {
+  const updateItem = useCallback(async (itemId: string, formData: InventoryItemFormValues) => {
+    let imageUrlToUpdate = typeof formData.imageUrl === 'string' ? formData.imageUrl : '';
+
+    if (imageUrlToUpdate.startsWith('data:image/')) {
+        await setImage(itemId, imageUrlToUpdate);
+    } else if (!imageUrlToUpdate) {
+        // If the URL is cleared, remove from storage
+        await setImage(itemId, '');
+    }
+
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id === itemId) {
@@ -217,7 +170,7 @@ export function useInventory() {
             publicationDate: formData.publicationDate,
             description: formData.description || '',
             notes: formData.notes || '',
-            imageUrl: typeof formData.imageUrl === 'string' ? formData.imageUrl : (item.imageUrl || ''),
+            imageUrl: imageUrlToUpdate,
             tags: (formData.tags || []).map(t => t.toLowerCase()),
             updatedAt: new Date(),
             originalFileFormats: formData.originalFileFormats || [],
@@ -225,6 +178,13 @@ export function useInventory() {
             isOriginalNameNA: formData.isOriginalNameNA || false,
             calibredStatus: formData.calibredStatus || 'no',
           };
+          
+          const itemToPersist = { ...updatedItemData };
+          if (imageUrlToUpdate.startsWith('data:image/')) {
+            itemToPersist.imageUrl = `idb:${itemId}`;
+          }
+          setItem(itemToPersist);
+
           return updatedItemData;
         }
         return item;
@@ -235,7 +195,8 @@ export function useInventory() {
 
   }, [updateAllTagsInSet]);
 
-  const deleteItem = useCallback((itemId: string) => {
+  const deleteItemAndImage = useCallback(async (itemId: string) => {
+    await deleteItem(itemId); // This also handles deleting the image via the storage lib
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
   }, []);
 
@@ -254,7 +215,6 @@ export function useInventory() {
   const filteredAndSortedItems = useMemo(() => {
     let filtered = [...items];
 
-    // 1. Filter by active tags
     if (activeTags.size > 0) {
       filtered = filtered.filter(item => {
         const itemTags = new Set(item.tags.map(t => t.toLowerCase()));
@@ -262,7 +222,6 @@ export function useInventory() {
       });
     }
 
-    // 2. Filter by search term within the already filtered list
     const trimmedSearchTerm = searchTerm.trim().toLowerCase();
     if (trimmedSearchTerm) {
       const searchKeywords = trimmedSearchTerm.split(' ').filter(term => term.trim() !== '');
@@ -276,12 +235,11 @@ export function useInventory() {
       }
     }
 
-    // 3. Sort the final list
     return filtered.sort((a, b) => {
       let comparison = 0;
       if (sortOption === 'title') {
         comparison = a.title.localeCompare(b.title);
-      } else { // 'createdAt'
+      } else {
         const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
         const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
         comparison = dateA - dateB;
@@ -290,11 +248,20 @@ export function useInventory() {
     });
   }, [items, searchTerm, activeTags, sortOption, sortDirection]);
 
-
-  const backupData = useCallback(() => {
+  const backupData = useCallback(async () => {
     if (typeof window === "undefined") return;
     try {
-      const dataStr = JSON.stringify(items, null, 2);
+      const itemsToBackup = await getAllItems(); // Fetches from IndexedDB
+      const itemsWithImages = await Promise.all(itemsToBackup.map(async (item) => {
+        if (item.imageUrl && item.imageUrl.startsWith('idb:')) {
+          const imageId = item.imageUrl.split(':')[1];
+          const imageData = await getImage(imageId);
+          return { ...item, imageUrl: imageData || '' };
+        }
+        return item;
+      }));
+
+      const dataStr = JSON.stringify(itemsWithImages, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}.json`;
       
@@ -307,18 +274,18 @@ export function useInventory() {
     } catch (error) {
       console.error("Failed to backup data:", error);
     }
-  }, [items]);
+  }, []);
 
   const restoreData = useCallback(async (file: File) => {
     if (!file || file.type !== 'application/json') {
       throw new Error("Invalid file type. Please select a JSON file.");
     }
 
-    backupData();
+    await backupData(); // First, backup current data as a precaution.
 
     return new Promise<void>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const content = event.target?.result as string;
           if (!content) {
@@ -326,19 +293,34 @@ export function useInventory() {
           }
           const parsedData = JSON.parse(content);
 
-          if (!Array.isArray(parsedData) || !parsedData.every(item => typeof item.id === 'string' && typeof item.title === 'string')) {
+          if (!Array.isArray(parsedData)) {
             throw new Error("Invalid data format. Expected an array of inventory items.");
           }
+          
+          await clearAllData(); // Clear existing IndexedDB data
 
-          const restoredItems: InventoryItem[] = parsedData.map(sanitizeRawItem);
-          setItems(restoredItems);
-
+          const restoredItems = parsedData.map(sanitizeRawItem);
           const newAllTags = new Set<string>();
-          restoredItems.forEach(item => {
+
+          for (const item of restoredItems) {
+            const { imageUrl, ...itemData } = item;
+            let itemToPersist = { ...itemData, imageUrl: '' };
+            
+            if (imageUrl && imageUrl.startsWith('data:image/')) {
+              await setImage(item.id, imageUrl);
+              itemToPersist.imageUrl = `idb:${item.id}`;
+            } else {
+              itemToPersist.imageUrl = imageUrl || '';
+            }
+
+            await setItem(itemToPersist);
+            
             if (Array.isArray(item.tags)) {
               item.tags.forEach(tag => newAllTags.add(tag));
             }
-          });
+          }
+          
+          setItems(restoredItems);
           setAllTagsSet(newAllTags);
           
           resolve();
@@ -354,6 +336,7 @@ export function useInventory() {
       reader.readAsText(file);
     });
   }, [backupData]);
+
 
   const allTagsArray = useMemo(() => Array.from(allTagsSet).sort(), [allTagsSet]);
 
@@ -371,10 +354,25 @@ export function useInventory() {
     const trimmedNewTag = newTag.trim().toLowerCase();
     if (!trimmedNewTag || oldTag === trimmedNewTag) return;
 
-    setItems(prevItems => prevItems.map(item => ({
-      ...item,
-      tags: item.tags.map(t => t === oldTag ? trimmedNewTag : t)
-    })));
+    setItems(prevItems => {
+        const updatedItems = prevItems.map(item => ({
+            ...item,
+            tags: item.tags.map(t => t === oldTag ? trimmedNewTag : t)
+        }));
+
+        // Persist the changes for each modified item
+        updatedItems.forEach(item => {
+            if (item.tags.includes(trimmedNewTag)) {
+                let itemToPersist = { ...item };
+                if (item.imageUrl && item.imageUrl.startsWith('data:image/')) {
+                    itemToPersist.imageUrl = `idb:${item.id}`;
+                }
+                setItem(itemToPersist);
+            }
+        });
+
+        return updatedItems;
+    });
 
     setAllTagsSet(prev => {
       const newSet = new Set(Array.from(prev).map(t => t === oldTag ? trimmedNewTag : t));
@@ -383,10 +381,25 @@ export function useInventory() {
   }, []);
 
   const deleteGlobalTag = useCallback((tagToDelete: string) => {
-    setItems(prevItems => prevItems.map(item => ({
-      ...item,
-      tags: item.tags.filter(t => t !== tagToDelete)
-    })));
+    setItems(prevItems => {
+        const updatedItems = prevItems.map(item => ({
+            ...item,
+            tags: item.tags.filter(t => t !== tagToDelete)
+        }));
+
+        // Persist the changes for each modified item
+        updatedItems.forEach(item => {
+             if (!item.tags.includes(tagToDelete)) {
+                let itemToPersist = { ...item };
+                if (item.imageUrl && item.imageUrl.startsWith('data:image/')) {
+                    itemToPersist.imageUrl = `idb:${item.id}`;
+                }
+                setItem(itemToPersist);
+            }
+        });
+        
+        return updatedItems;
+    });
 
     setAllTagsSet(prev => {
       const newSet = new Set(prev);
@@ -395,12 +408,11 @@ export function useInventory() {
     });
   }, []);
 
-
   return {
     items: filteredAndSortedItems,
     addItem,
     updateItem,
-    deleteItem,
+    deleteItem: deleteItemAndImage,
     searchTerm,
     setSearchTerm,
     activeTags,
@@ -418,3 +430,5 @@ export function useInventory() {
     setSortDirection,
   };
 }
+
+    

@@ -106,24 +106,6 @@ export default function HomePage() {
     toggleTagInFilter(tagToToggle);
   };
 
-  useEffect(() => {
-    if (editingItem && isFormOpen) {
-      const currentVersionInList = inventoryItems.find(i => i.id === editingItem.id);
-      if (currentVersionInList) {
-         const currentFormatsString = JSON.stringify(currentVersionInList.originalFileFormats?.slice().sort() || []);
-         const editingFormatsString = JSON.stringify(editingItem.originalFileFormats?.slice().sort() || []);
-        
-        if (currentFormatsString !== editingFormatsString) {
-          setEditingItem(currentVersionInList);
-        }
-      } else {
-        setEditingItem(null);
-        setIsFormOpen(false); 
-      }
-    }
-  }, [inventoryItems, editingItem, isFormOpen]);
-
-
   const handleRestoreClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -452,7 +434,7 @@ export default function HomePage() {
         onOpenChange={handleFormOpenChange}
         onSubmit={handleFormSubmit}
         initialData={editingItem}
-        key={editingItem ? `edit-${editingItem.id}-${JSON.stringify(editingItem.originalFileFormats?.slice().sort() || [])}` : 'add-new'}
+        key={editingItem ? `edit-${editingItem.id}-${editingItem.updatedAt}` : 'add-new'}
         availableGlobalTags={allTags}
         onAddGlobalTag={addNewGlobalTag}
         currentPage={formCurrentPage}
@@ -510,3 +492,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

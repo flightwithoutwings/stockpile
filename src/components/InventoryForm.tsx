@@ -78,7 +78,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           author: '',
           publicationDate: undefined,
           description: '',
-          notes: '',
+notes: '',
           imageUrl: '',
           tags: [],
           originalFileFormats: [''],
@@ -425,7 +425,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                             <input id="file-upload-input" name="file-upload" type="file" className="sr-only" ref={fileInputRef} onChange={handleImageFileChange} accept="image/*" />
                             <p className="pl-1">or drag and drop</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+                          <p className="text-xs text-muted-foreground">PNG, JPG, GIF</p>
                         </div>
                       </div>
                       <FormField
@@ -714,3 +714,5 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 };
 
 export default InventoryForm;
+
+    

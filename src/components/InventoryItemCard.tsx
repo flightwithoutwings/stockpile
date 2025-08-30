@@ -21,21 +21,17 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
   const prevImageUrlRef = useRef<string | undefined | null>();
 
   useEffect(() => {
-    // Only reset imageError if item.imageUrl has actually changed its value.
     if (item.imageUrl !== prevImageUrlRef.current) {
       setImageError(false);
     }
-    // Update the ref to the current imageUrl for the next render.
     prevImageUrlRef.current = item.imageUrl;
   }, [item.imageUrl]);
 
   const handleImageError = useCallback(() => {
-    // Set error to true only if it's not already true,
-    // to prevent potential issues if onError is called multiple times.
     if (!imageError) {
       setImageError(true);
     }
-  }, [imageError]); // Depend on imageError to avoid setting state if already true
+  }, [imageError]);
 
   const getAiHint = () => {
     if (item.title.toLowerCase().includes('comic')) return 'comic book';
@@ -54,14 +50,14 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
             </div>
           ) : (
             <Image
-              src={item.imageUrl} // No need for || '' here, handled by the condition above
+              src={item.imageUrl}
               alt={item.title}
               layout="fill"
               objectFit="cover"
               className="transition-transform duration-300 group-hover:scale-105 rounded-lg"
               data-ai-hint={getAiHint()}
               onError={handleImageError}
-              unoptimized={item.imageUrl?.startsWith('data:')} // Add this if you expect data URIs and want to bypass Next.js optimization for them
+              unoptimized={item.imageUrl?.startsWith('data:')}
             />
           )}
         </div>
@@ -101,3 +97,5 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
 };
 
 export default InventoryItemCard;
+
+    
