@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { getAllItems, setItem, deleteItem, setImage, getImage, clearAllData } from '@/lib/storage';
+import { getAllItems, setItem, deleteItem, clearAllData } from '@/lib/storage';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
 
@@ -32,6 +32,7 @@ const sanitizeRawItem = (rawItem: any): InventoryItem => {
     description: typeof rawItem.description === 'string' ? rawItem.description : '',
     notes: typeof rawItem.notes === 'string' ? rawItem.notes : '',
     imageUrl: typeof rawItem.imageUrl === 'string' ? rawItem.imageUrl : '',
+    imageURI: typeof rawItem.imageURI === 'string' ? rawItem.imageURI : '',
     tags: Array.isArray(rawItem.tags) ? rawItem.tags.map(t => String(t).toLowerCase()) : [],
     createdAt: rawItem.createdAt ? new Date(rawItem.createdAt) : new Date(),
     updatedAt: rawItem.updatedAt ? new Date(rawItem.updatedAt) : new Date(),
@@ -56,17 +57,6 @@ export function useInventory() {
       try {
         const storedItems = await getAllItems();
         const currentItems = storedItems.map(sanitizeRawItem);
-        
-        // Fetch images for the items
-        for (const item of currentItems) {
-            if (item.imageUrl && item.imageUrl.startsWith('idb:')) {
-                const imageId = item.imageUrl.split(':')[1];
-                const imageDataUrl = await getImage(imageId);
-                if (imageDataUrl) {
-                    item.imageUrl = imageDataUrl;
-                }
-            }
-        }
         
         setItems(currentItems);
 
@@ -97,7 +87,6 @@ export function useInventory() {
   useEffect(() => {
     if (isInitialized) {
       try {
-        // We no longer save all items to localStorage. setItem handles individual saves.
         localStorage.setItem(SORT_CONFIG_KEY, JSON.stringify({ option: sortOption, direction: sortDirection }));
       } catch (error) {
         console.error("Failed to save sort config to localStorage:", error);
@@ -114,22 +103,15 @@ export function useInventory() {
   }, []);
 
   const addItem = useCallback(async (formData: InventoryItemFormValues) => {
-    const newItemId = crypto.randomUUID();
-    let imageUrlToStore = typeof formData.imageUrl === 'string' ? formData.imageUrl : '';
-
-    if (imageUrlToStore.startsWith('data:image/')) {
-        await setImage(newItemId, imageUrlToStore);
-        // We keep the data URI in the state for immediate display, but it won't be persisted this way.
-    }
-
     const newItem: InventoryItem = {
-      id: newItemId,
+      id: crypto.randomUUID(),
       title: formData.title,
       author: formData.author || '',
       publicationDate: formData.publicationDate,
       description: formData.description || '',
       notes: formData.notes || '',
-      imageUrl: imageUrlToStore,
+      imageUrl: formData.imageUrl || '',
+      imageURI: formData.imageURI || '',
       tags: (formData.tags || []).map(t => t.toLowerCase()),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -139,27 +121,12 @@ export function useInventory() {
       calibredStatus: formData.calibredStatus || 'no',
     };
     
-    // Create a version for IndexedDB with an image reference if needed.
-    const itemToPersist = { ...newItem };
-    if (imageUrlToStore.startsWith('data:image/')) {
-        itemToPersist.imageUrl = `idb:${newItemId}`;
-    }
-
-    await setItem(itemToPersist);
+    await setItem(newItem);
     setItems((prevItems) => [newItem, ...prevItems]);
     if (newItem.tags) updateAllTagsInSet(newItem.tags);
   }, [updateAllTagsInSet]);
 
   const updateItem = useCallback(async (itemId: string, formData: InventoryItemFormValues) => {
-    let imageUrlToUpdate = typeof formData.imageUrl === 'string' ? formData.imageUrl : '';
-
-    if (imageUrlToUpdate.startsWith('data:image/')) {
-        await setImage(itemId, imageUrlToUpdate);
-    } else if (!imageUrlToUpdate) {
-        // If the URL is cleared, remove from storage
-        await setImage(itemId, '');
-    }
-
     setItems((prevItems) =>
       prevItems.map((item) => {
         if (item.id === itemId) {
@@ -170,7 +137,8 @@ export function useInventory() {
             publicationDate: formData.publicationDate,
             description: formData.description || '',
             notes: formData.notes || '',
-            imageUrl: imageUrlToUpdate,
+            imageUrl: formData.imageUrl || '',
+            imageURI: formData.imageURI || '',
             tags: (formData.tags || []).map(t => t.toLowerCase()),
             updatedAt: new Date(),
             originalFileFormats: formData.originalFileFormats || [],
@@ -179,12 +147,7 @@ export function useInventory() {
             calibredStatus: formData.calibredStatus || 'no',
           };
           
-          const itemToPersist = { ...updatedItemData };
-          if (imageUrlToUpdate.startsWith('data:image/')) {
-            itemToPersist.imageUrl = `idb:${itemId}`;
-          }
-          setItem(itemToPersist);
-
+          setItem(updatedItemData);
           return updatedItemData;
         }
         return item;
@@ -196,7 +159,7 @@ export function useInventory() {
   }, [updateAllTagsInSet]);
 
   const deleteItemAndImage = useCallback(async (itemId: string) => {
-    await deleteItem(itemId); // This also handles deleting the image via the storage lib
+    await deleteItem(itemId);
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
   }, []);
 
@@ -251,17 +214,8 @@ export function useInventory() {
   const backupData = useCallback(async () => {
     if (typeof window === "undefined") return;
     try {
-      const itemsToBackup = await getAllItems(); // Fetches from IndexedDB
-      const itemsWithImages = await Promise.all(itemsToBackup.map(async (item) => {
-        if (item.imageUrl && item.imageUrl.startsWith('idb:')) {
-          const imageId = item.imageUrl.split(':')[1];
-          const imageData = await getImage(imageId);
-          return { ...item, imageUrl: imageData || '' };
-        }
-        return item;
-      }));
-
-      const dataStr = JSON.stringify(itemsWithImages, null, 2);
+      const itemsToBackup = await getAllItems(); 
+      const dataStr = JSON.stringify(itemsToBackup, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}.json`;
       
@@ -297,24 +251,13 @@ export function useInventory() {
             throw new Error("Invalid data format. Expected an array of inventory items.");
           }
           
-          await clearAllData(); // Clear existing IndexedDB data
+          await clearAllData();
 
           const restoredItems = parsedData.map(sanitizeRawItem);
           const newAllTags = new Set<string>();
 
           for (const item of restoredItems) {
-            const { imageUrl, ...itemData } = item;
-            let itemToPersist = { ...itemData, imageUrl: '' };
-            
-            if (imageUrl && imageUrl.startsWith('data:image/')) {
-              await setImage(item.id, imageUrl);
-              itemToPersist.imageUrl = `idb:${item.id}`;
-            } else {
-              itemToPersist.imageUrl = imageUrl || '';
-            }
-
-            await setItem(itemToPersist);
-            
+            await setItem(item);
             if (Array.isArray(item.tags)) {
               item.tags.forEach(tag => newAllTags.add(tag));
             }
@@ -355,22 +298,16 @@ export function useInventory() {
     if (!trimmedNewTag || oldTag === trimmedNewTag) return;
 
     setItems(prevItems => {
-        const updatedItems = prevItems.map(item => ({
-            ...item,
-            tags: item.tags.map(t => t === oldTag ? trimmedNewTag : t)
-        }));
-
-        // Persist the changes for each modified item
-        updatedItems.forEach(item => {
-            if (item.tags.includes(trimmedNewTag)) {
-                let itemToPersist = { ...item };
-                if (item.imageUrl && item.imageUrl.startsWith('data:image/')) {
-                    itemToPersist.imageUrl = `idb:${item.id}`;
-                }
-                setItem(itemToPersist);
-            }
+        const updatedItems = prevItems.map(item => {
+          const hasTag = item.tags.includes(oldTag);
+          if (hasTag) {
+            const newTags = item.tags.map(t => t === oldTag ? trimmedNewTag : t);
+            const updatedItem = { ...item, tags: newTags };
+            setItem(updatedItem); // Persist change
+            return updatedItem;
+          }
+          return item;
         });
-
         return updatedItems;
     });
 
@@ -382,22 +319,15 @@ export function useInventory() {
 
   const deleteGlobalTag = useCallback((tagToDelete: string) => {
     setItems(prevItems => {
-        const updatedItems = prevItems.map(item => ({
-            ...item,
-            tags: item.tags.filter(t => t !== tagToDelete)
-        }));
-
-        // Persist the changes for each modified item
-        updatedItems.forEach(item => {
-             if (!item.tags.includes(tagToDelete)) {
-                let itemToPersist = { ...item };
-                if (item.imageUrl && item.imageUrl.startsWith('data:image/')) {
-                    itemToPersist.imageUrl = `idb:${item.id}`;
-                }
-                setItem(itemToPersist);
+        const updatedItems = prevItems.map(item => {
+            if (item.tags.includes(tagToDelete)) {
+              const newTags = item.tags.filter(t => t !== tagToDelete);
+              const updatedItem = { ...item, tags: newTags };
+              setItem(updatedItem); // Persist change
+              return updatedItem;
             }
+            return item;
         });
-        
         return updatedItems;
     });
 
@@ -430,5 +360,3 @@ export function useInventory() {
     setSortDirection,
   };
 }
-
-    

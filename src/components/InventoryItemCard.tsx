@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,20 +18,29 @@ interface InventoryItemCardProps {
 
 const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onDelete }) => {
   const [imageError, setImageError] = useState(false);
-  const prevImageUrlRef = useRef<string | undefined | null>();
+  const [finalImageToDisplay, setFinalImageToDisplay] = useState<string | null>(null);
 
   useEffect(() => {
-    if (item.imageUrl !== prevImageUrlRef.current) {
-      setImageError(false);
+    // Reset error state when item changes
+    setImageError(false);
+    
+    // Prioritize URL, fallback to URI
+    if (item.imageUrl) {
+      setFinalImageToDisplay(item.imageUrl);
+    } else if (item.imageURI) {
+      setFinalImageToDisplay(item.imageURI);
+    } else {
+      setFinalImageToDisplay(null);
     }
-    prevImageUrlRef.current = item.imageUrl;
-  }, [item.imageUrl]);
+  }, [item.imageUrl, item.imageURI]);
 
-  const handleImageError = useCallback(() => {
-    if (!imageError) {
-      setImageError(true);
+  const handleImageError = () => {
+    // If URL fails, try falling back to URI
+    if (item.imageUrl && item.imageURI) {
+      setFinalImageToDisplay(item.imageURI);
     }
-  }, [imageError]);
+    setImageError(true);
+  };
 
   const getAiHint = () => {
     if (item.title.toLowerCase().includes('comic')) return 'comic book';
@@ -40,24 +49,26 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
     return 'cover art';
   };
 
+  const showPlaceholder = imageError || !finalImageToDisplay;
+
   return (
     <Card className="flex flex-col overflow-hidden transition-shadow duration-300 group bg-background border-0">
       <CardHeader className="p-0 relative">
         <div className="aspect-[2/3] w-full relative cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg" onClick={() => onEdit(item)}>
-          {imageError || !item.imageUrl ? (
+          {showPlaceholder ? (
             <div className="aspect-[2/3] w-full bg-card rounded-lg flex items-center justify-center" data-ai-hint="blank image area">
               <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50" />
             </div>
           ) : (
             <Image
-              src={item.imageUrl}
+              src={finalImageToDisplay!}
               alt={item.title}
-              layout="fill"
+              fill
               objectFit="cover"
               className="transition-transform duration-300 group-hover:scale-105 rounded-lg"
               data-ai-hint={getAiHint()}
               onError={handleImageError}
-              unoptimized={item.imageUrl?.startsWith('data:')}
+              unoptimized={finalImageToDisplay?.startsWith('data:')}
             />
           )}
         </div>
@@ -97,5 +108,3 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
 };
 
 export default InventoryItemCard;
-
-    

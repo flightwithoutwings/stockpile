@@ -7,6 +7,7 @@ export type InventoryItem = {
   description?: string;
   notes?: string;
   imageUrl?: string;
+  imageURI?: string;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;

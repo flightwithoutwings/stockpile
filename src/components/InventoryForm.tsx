@@ -54,7 +54,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const { toast } = useToast();
   const [currentTags, setCurrentTags] = useState<string[]>(initialData?.tags || []);
   const [newGlobalTagInput, setNewGlobalTagInput] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<InventoryItemFormValues>({
@@ -67,6 +67,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           description: initialData.description || '',
           notes: initialData.notes || '',
           imageUrl: initialData.imageUrl || '',
+          imageURI: initialData.imageURI || '',
           tags: initialData.tags || [],
           originalFileFormats: initialData.originalFileFormats?.length ? initialData.originalFileFormats : [''],
           originalName: initialData.originalName || '',
@@ -78,8 +79,9 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           author: '',
           publicationDate: undefined,
           description: '',
-notes: '',
+          notes: '',
           imageUrl: '',
+          imageURI: '',
           tags: [],
           originalFileFormats: [''],
           originalName: '',
@@ -95,6 +97,18 @@ notes: '',
 
   const watchIsOriginalNameNA = form.watch('isOriginalNameNA');
   const originalNameValue = form.watch('originalName');
+  const watchImageURI = form.watch('imageURI');
+  const watchImageUrl = form.watch('imageUrl');
+
+  useEffect(() => {
+      if (watchImageUrl) {
+        setImagePreview(watchImageUrl);
+      } else if (watchImageURI) {
+        setImagePreview(watchImageURI);
+      } else {
+        setImagePreview(null);
+      }
+  }, [watchImageURI, watchImageUrl]);
 
   useEffect(() => {
     if (watchIsOriginalNameNA) {
@@ -117,6 +131,7 @@ notes: '',
               description: initialData.description || '',
               notes: initialData.notes || '',
               imageUrl: initialData.imageUrl || '',
+              imageURI: initialData.imageURI || '',
               tags: tags,
               originalFileFormats: formats.length ? formats : [''],
               originalName: initialData.originalName || '',
@@ -130,6 +145,7 @@ notes: '',
               description: '',
               notes: '',
               imageUrl: '',
+              imageURI: '',
               tags: [],
               originalFileFormats: [''],
               originalName: '',
@@ -138,7 +154,7 @@ notes: '',
             }
       );
       setCurrentTags(tags);
-      setImagePreview(initialData?.imageUrl || null);
+      setImagePreview(initialData?.imageUrl || initialData?.imageURI || null);
       setNewGlobalTagInput('');
     }
   }, [isOpen, initialData, form]);
@@ -150,8 +166,7 @@ notes: '',
         const reader = new FileReader();
         reader.onloadend = () => {
           const result = reader.result as string;
-          setImagePreview(result);
-          form.setValue('imageUrl', result, { shouldValidate: true });
+          form.setValue('imageURI', result, { shouldValidate: true });
         };
         reader.readAsDataURL(file);
       } else {
@@ -171,8 +186,7 @@ notes: '',
         const reader = new FileReader();
         reader.onloadend = () => {
           const result = reader.result as string;
-          setImagePreview(result);
-          form.setValue('imageUrl', result, { shouldValidate: true });
+          form.setValue('imageURI', result, { shouldValidate: true });
         };
         reader.readAsDataURL(file);
       } else {
@@ -246,7 +260,7 @@ notes: '',
     if (currentPage === 1) {
         isValid = await form.trigger(['title', 'author', 'publicationDate', 'description']);
     } else if (currentPage === 2) {
-        isValid = await form.trigger(['imageUrl']);
+        isValid = await form.trigger(['imageUrl', 'imageURI']);
     } else if (currentPage === 3) {
         isValid = await form.trigger(['originalFileFormats', 'originalName', 'isOriginalNameNA', 'calibredStatus']);
     } else if (currentPage === 4) {
@@ -403,8 +417,8 @@ notes: '',
                 {currentPage === 2 && (
                   <>
                     <div>
-                      <FormLabel>Item Image</FormLabel>
-                      <div
+                      <FormLabel>Item Image Preview</FormLabel>
+                       <div
                         className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md hover:border-primary transition-colors cursor-pointer"
                         onClick={() => fileInputRef.current?.click()}
                         data-ai-hint="image upload area"
@@ -428,22 +442,37 @@ notes: '',
                           <p className="text-xs text-muted-foreground">PNG, JPG, GIF</p>
                         </div>
                       </div>
+
+                       <FormField
+                        control={form.control}
+                        name="imageURI"
+                        render={({ field }) => (
+                          <FormItem className="mt-2">
+                            <FormLabel className="text-xs">Image Data URI (from upload)</FormLabel>
+                            <FormControl>
+                               <Textarea
+                                  readOnly
+                                  placeholder="Will be generated upon image upload..."
+                                  {...field}
+                                  className="text-xs text-muted-foreground"
+                                  rows={3}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="imageUrl"
                         render={({ field }) => (
                           <FormItem className="mt-2">
-                            <FormLabel className="text-xs">Or enter Image URL (Optional)</FormLabel>
+                            <FormLabel className="text-xs">Or enter Image URL (takes priority)</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="https://example.com/image.jpg"
                                 {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  if (!fileInputRef.current?.files?.length) {
-                                    setImagePreview(e.target.value);
-                                  }
-                                }}
                               />
                             </FormControl>
                             <FormMessage />
@@ -714,5 +743,3 @@ notes: '',
 };
 
 export default InventoryForm;
-
-    
