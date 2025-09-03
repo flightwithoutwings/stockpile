@@ -448,13 +448,12 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                         name="imageURI"
                         render={({ field }) => (
                           <FormItem className="mt-2">
-                            <FormLabel className="text-xs">Image Data URI (from upload)</FormLabel>
+                            <FormLabel className="text-xs">Image Data URI</FormLabel>
                             <FormControl>
                                <Textarea
-                                  readOnly
-                                  placeholder="Will be generated upon image upload..."
+                                  placeholder="Generated upon image upload, or can be pasted here directly..."
                                   {...field}
-                                  className="text-xs text-muted-foreground"
+                                  className="text-xs"
                                   rows={3}
                                 />
                             </FormControl>
