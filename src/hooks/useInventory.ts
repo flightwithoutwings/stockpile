@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
 import { getAllItems, setItem, deleteItem, clearAllData } from '@/lib/storage';
+import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
 
@@ -211,13 +212,30 @@ export function useInventory() {
     });
   }, [items, searchTerm, activeTags, sortOption, sortDirection]);
 
-  const backupData = useCallback(async () => {
+  const backupData = useCallback(async (type: ExportType) => {
     if (typeof window === "undefined") return;
     try {
       const itemsToBackup = await getAllItems(); 
-      const dataStr = JSON.stringify(itemsToBackup, null, 2);
+      
+      const itemsToExport = itemsToBackup.map(item => {
+        const exportItem = { ...item };
+        if (type === 'url_only') {
+          delete exportItem.imageURI;
+        } else if (type === 'uri_only') {
+          delete exportItem.imageUrl;
+        }
+        return exportItem;
+      });
+
+      const dataStr = JSON.stringify(itemsToExport, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}.json`;
+      
+      let fileNameSuffix = '';
+      if (type === 'url_only') fileNameSuffix = '_url_only';
+      else if (type === 'uri_only') fileNameSuffix = '_uri_only';
+      else fileNameSuffix = '_both';
+      
+      const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}.json`;
       
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
@@ -235,7 +253,7 @@ export function useInventory() {
       throw new Error("Invalid file type. Please select a JSON file.");
     }
 
-    await backupData(); // First, backup current data as a precaution.
+    await backupData('both'); // First, backup current data as a precaution.
 
     return new Promise<void>((resolve, reject) => {
       const reader = new FileReader();
@@ -360,3 +378,5 @@ export function useInventory() {
     setSortDirection,
   };
 }
+
+    

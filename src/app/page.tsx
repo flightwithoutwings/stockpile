@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import AppHeader from '@/components/AppHeader';
+import React, { useState, useRef, useEffect } from 'react';
+import AppHeader, { type ExportType } from '@/components/AppHeader';
 import InventoryGrid from '@/components/InventoryGrid';
 import InventoryForm from '@/components/InventoryForm';
 import TagManager from '@/components/TagManager';
@@ -113,6 +113,11 @@ export default function HomePage() {
     }
   };
 
+  const handleExportClick = (type: ExportType) => {
+    backupData(type);
+    toast({ title: "Backup Initiated", description: "Your library data is being downloaded." });
+  };
+
   const handleFileSelectedForRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -215,6 +220,7 @@ export default function HomePage() {
             description: String(itemJson.description || itemJson.summary || ''),
             notes: String(itemJson.notes || ''),
             imageUrl: String(itemJson.imageUrl || itemJson.image || itemJson.coverImage || itemJson.cover || ''),
+            imageURI: String(itemJson.imageURI || ''),
             tags: Array.isArray(itemJson.tags) ? itemJson.tags.map(String) : (typeof itemJson.tags === 'string' ? itemJson.tags.split(',').map(t => t.trim()) : []),
             originalFileFormats: Array.isArray(itemJson.originalFileFormats) ? itemJson.originalFileFormats.map(String) : [],
             originalName: itemJson.isOriginalNameNA ? 'N/A' : String(itemJson.originalName || ''),
@@ -301,10 +307,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-background">
       <AppHeader
         onAddItemClick={handleAddItemClick}
-        onBackupClick={() => {
-          backupData();
-          toast({ title: "Backup Initiated", description: "Your library data is being downloaded." });
-        }}
+        onExportClick={handleExportClick}
         onRestoreClick={handleRestoreClick}
         onImportJsonItemClick={handleImportJsonItemClick}
       />

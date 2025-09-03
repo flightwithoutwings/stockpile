@@ -1,16 +1,19 @@
 
 import type React from 'react';
 import { Button } from '@/components/ui/button';
-import { Blocks, Download, PackagePlus, Upload, FileJson } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Blocks, Upload, PackagePlus, FileJson, ChevronDown } from 'lucide-react';
+
+export type ExportType = 'url_only' | 'uri_only' | 'both';
 
 interface AppHeaderProps {
   onAddItemClick: () => void;
-  onBackupClick: () => void;
+  onExportClick: (type: ExportType) => void;
   onRestoreClick: () => void;
   onImportJsonItemClick: () => void;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onBackupClick, onRestoreClick, onImportJsonItemClick }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onExportClick, onRestoreClick, onImportJsonItemClick }) => {
   return (
     <header className="bg-card border-b border-border shadow-sm sticky top-0 z-40">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -25,12 +28,29 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onBackupClick, on
           </Button>
           <Button variant="outline" onClick={onRestoreClick}>
             <Upload className="mr-2 h-4 w-4" />
-            Restore Data
+            Restore
           </Button>
-          <Button variant="outline" onClick={onBackupClick}>
-            <Download className="mr-2 h-4 w-4" />
-            Backup Data
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Export Data
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onExportClick('url_only')}>
+                URL only
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExportClick('uri_only')}>
+                Uploaded Images only
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExportClick('both')}>
+                URL & Uploaded Images
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button onClick={onAddItemClick} className="bg-accent hover:bg-accent/90 text-accent-foreground">
             <PackagePlus className="mr-2 h-4 w-4" />
             Add New Item
@@ -42,3 +62,5 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onBackupClick, on
 };
 
 export default AppHeader;
+
+    
