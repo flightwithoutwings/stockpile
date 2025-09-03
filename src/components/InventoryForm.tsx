@@ -175,32 +175,6 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
     }
   };
 
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (currentPage !== 2) return;
-
-    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-      const file = event.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          form.setValue('imageURI', result, { shouldValidate: true });
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast({ title: "Invalid File", description: "Please drop an image file.", variant: "destructive" });
-      }
-      event.dataTransfer.clearData();
-    }
-  }, [form, toast, currentPage]);
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
   const toggleTag = (tagToToggle: string) => {
     const tag = tagToToggle.trim().toLowerCase();
     const newTags = currentTags.includes(tag)
@@ -295,8 +269,6 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-lg md:max-w-2xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden p-0"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
       >
         <DialogHeader className="px-6 pt-6 pb-2 border-b">
           <DialogTitle className="truncate pr-8">
@@ -697,8 +669,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Notes (Optional)</FormLabel>
-                          <FormControl>
+                          <FormLabel>Notes (Optional)</FormLabel>                          <FormControl>
                             <Textarea placeholder="Add personal notes or reminders about this item..." {...field} rows={10} />
                           </FormControl>
                           <FormMessage />
