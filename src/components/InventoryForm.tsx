@@ -20,7 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, UploadCloud, Trash2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
@@ -159,20 +158,38 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
     }
   }, [isOpen, initialData, form]);
 
+  const processImageFile = useCallback((file: File) => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        form.setValue('imageURI', result, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toast({ title: "Invalid File Type", description: "Please upload an image file (PNG, JPG, GIF).", variant: "destructive" });
+    }
+  }, [form, toast]);
+
   const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result as string;
-          form.setValue('imageURI', result, { shouldValidate: true });
-        };
-        reader.readAsDataURL(file);
-      } else {
-        toast({ title: "Invalid File Type", description: "Please upload an image file (PNG, JPG, GIF).", variant: "destructive" });
-      }
+      processImageFile(file);
     }
+  };
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+      const file = event.dataTransfer.files[0];
+      processImageFile(file);
+    }
+  }, [processImageFile]);
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const toggleTag = (tagToToggle: string) => {
@@ -393,6 +410,8 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                        <div
                         className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md hover:border-primary transition-colors cursor-pointer"
                         onClick={() => fileInputRef.current?.click()}
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
                         data-ai-hint="image upload area"
                       >
                         <div className="space-y-1 text-center">
@@ -713,3 +732,5 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 };
 
 export default InventoryForm;
+
+    
