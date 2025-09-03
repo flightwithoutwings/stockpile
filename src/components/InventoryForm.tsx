@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
+import { Calendar } from '@/components/ui/calendar';
 
 
 interface InventoryFormProps {
