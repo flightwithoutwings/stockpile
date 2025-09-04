@@ -13,6 +13,7 @@ import type { InventoryItemFormValues } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import Pagination from '@/components/Pagination';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function HomePage() {
   const {
@@ -304,34 +305,40 @@ export default function HomePage() {
         onRestoreClick={handleRestoreClick}
         onImportJsonItemClick={handleImportJsonItemClick}
       />
-      <main className="flex-grow container mx-auto px-4 py-6 overflow-y-auto">
-        <SearchBar
-          initialSearchTerm={searchTerm}
-          onSearch={setSearchTerm}
-          sortOption={sortOption}
-          onSortOptionChange={setSortOption}
-          sortDirection={sortDirection}
-          onSortDirectionChange={setSortDirection}
-          allTags={allTags}
-          activeTags={activeTags}
-          onTagToggle={toggleTagInFilter}
-          onManageTagsClick={() => setIsTagManagerOpen(true)}
-        />
-        
-        <div className="border-t border-border pt-6">
-          {!isLoading && (
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-foreground">
-                ({totalFilteredItems}) {totalFilteredItems === 1 ? 'Item' : 'Items'}
-              </h2>
-            </div>
-          )}
-          <InventoryGrid
-            items={inventoryItems}
-            onEditItem={handleEditItem}
-            onDeleteItem={handleDeleteItemClick}
-            isLoading={isLoading}
+      <main className="flex-1 container mx-auto px-4 flex flex-col min-h-0">
+        <div className="py-6 bg-background">
+          <SearchBar
+            initialSearchTerm={searchTerm}
+            onSearch={setSearchTerm}
+            sortOption={sortOption}
+            onSortOptionChange={setSortOption}
+            sortDirection={sortDirection}
+            onSortDirectionChange={setSortDirection}
+            allTags={allTags}
+            activeTags={activeTags}
+            onTagToggle={toggleTagInFilter}
+            onManageTagsClick={() => setIsTagManagerOpen(true)}
           />
+        </div>
+        
+        <div className="border-t border-border flex-1 flex flex-col min-h-0">
+           <div className="pt-6 pb-4 bg-background">
+            {!isLoading && (
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  ({totalFilteredItems}) {totalFilteredItems === 1 ? 'Item' : 'Items'}
+                </h2>
+              </div>
+            )}
+          </div>
+          <ScrollArea className="flex-1 -mr-4 pr-4">
+            <InventoryGrid
+              items={inventoryItems}
+              onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItemClick}
+              isLoading={isLoading}
+            />
+          </ScrollArea>
         </div>
       </main>
 
@@ -425,5 +432,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
