@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
 import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys, getItem } from '@/lib/storage';
@@ -52,6 +52,7 @@ export function useInventory() {
   const [allTagsSet, setAllTagsSet] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState<SortOption>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const exportCounter = useRef(1);
 
   useEffect(() => {
     const loadData = async () => {
@@ -222,7 +223,8 @@ export function useInventory() {
         else if (type === 'uri_only') fileNameSuffix = '_uri_only';
         else fileNameSuffix = '_both';
         
-        const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}.json`;
+        const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}_(${exportCounter.current}).json`;
+        exportCounter.current += 1;
 
         // Create a WritableStream to a file.
         // This API is not supported in Firefox and requires a polyfill for wider compatibility.
@@ -242,7 +244,6 @@ export function useInventory() {
 
         for (let i = 0; i < allItemKeys.length; i++) {
             const key = allItemKeys[i];
-            // @ts-ignore
             const item = await getItem(key);
             if (item) {
                 const exportItem = { ...item };
