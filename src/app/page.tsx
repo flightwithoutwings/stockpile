@@ -24,9 +24,8 @@ export default function HomePage() {
     addItem,
     updateItem,
     deleteItem,
-    localSearchTerm,
-    setLocalSearchTerm,
-    commitSearch,
+    searchTerm,
+    setSearchTerm,
     clearSearch,
     activeTags,
     toggleTagInFilter,
@@ -47,6 +46,7 @@ export default function HomePage() {
     totalFilteredItems,
   } = useInventory();
 
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -57,6 +57,10 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportFileInputRef = useRef<HTMLInputElement>(null);
   const [formCurrentPage, setFormCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
 
   const handleAddItemClick = () => {
     setEditingItem(null);
@@ -107,8 +111,13 @@ export default function HomePage() {
 
   const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      commitSearch();
+      setSearchTerm(localSearchTerm);
     }
+  };
+  
+  const handleClearSearch = () => {
+      setLocalSearchTerm('');
+      clearSearch();
   };
 
   const handleTagPillClick = (tagToToggle: string) => {
@@ -336,7 +345,7 @@ export default function HomePage() {
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={clearSearch}
+              onClick={handleClearSearch}
             >
               <X className="h-5 w-5" />
             </Button>
