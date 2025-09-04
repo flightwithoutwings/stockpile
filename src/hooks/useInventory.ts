@@ -10,8 +10,8 @@ import type { ExportType } from '@/components/AppHeader';
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
 const ITEMS_PER_PAGE = 30;
 
-type SortOption = 'createdAt' | 'title';
-type SortDirection = 'asc' | 'desc';
+export type SortOption = 'createdAt' | 'title';
+export type SortDirection = 'asc' | 'desc';
 
 const sanitizeRawItem = (rawItem: any): InventoryItem => {
   const isOriginalNameTrulyNA = typeof rawItem.isOriginalNameNA === 'boolean' ? rawItem.isOriginalNameNA : false;
@@ -171,10 +171,6 @@ export function useInventory() {
   const deleteItemAndImage = useCallback(async (itemId: string) => {
     await deleteItem(itemId);
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
-  }, []);
-
-  const clearSearch = useCallback(() => {
-    setSearchTerm('');
   }, []);
 
   const toggleTagInFilter = useCallback((tagToToggle: string) => {
@@ -394,7 +390,6 @@ setItem(updatedItem);
     deleteItem: deleteItemAndImage,
     searchTerm,
     setSearchTerm,
-    clearSearch,
     activeTags,
     toggleTagInFilter,
     backupData,
