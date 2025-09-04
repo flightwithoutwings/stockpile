@@ -309,14 +309,14 @@ export default function HomePage() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       <AppHeader
         onAddItemClick={handleAddItemClick}
         onExportClick={handleExportClick}
         onRestoreClick={handleRestoreClick}
         onImportJsonItemClick={handleImportJsonItemClick}
       />
-      <main className="flex-grow container mx-auto px-4 py-6">
+      <main className="flex-grow container mx-auto px-4 py-6 overflow-y-auto">
         <div className="mb-6 relative w-full max-w-lg">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -506,7 +506,7 @@ export default function HomePage() {
         </footer>
       )}
 
-      <footer className="py-4 text-center text-sm text-muted-foreground border-t border-border bg-secondary">
+      <footer className="py-4 text-center text-sm text-muted-foreground border-t border-border bg-secondary shrink-0">
         Stockpile &copy; {new Date().getFullYear()} - Your Comic/Book Library
       </footer>
     </div>

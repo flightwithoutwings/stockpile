@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
@@ -15,11 +16,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased`}>
-        <div className="min-h-screen flex flex-col">
-          {children}
-        </div>
+    <html lang="en" className="h-full">
+      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased h-full`}>
+        {children}
         <Toaster />
       </body>
     </html>
