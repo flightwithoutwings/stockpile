@@ -101,7 +101,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 onClick={() => onSortDirectionChange('asc')}
             >
                 <ArrowUp className="mr-2 h-4 w-4" />
-                Asc
+                Ascending
             </Badge>
             <Badge
                 variant={sortDirection === 'desc' ? 'secondary' : 'outline'}
@@ -109,33 +109,34 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 onClick={() => onSortDirectionChange('desc')}
             >
                 <ArrowDown className="mr-2 h-4 w-4" />
-                Desc
+                Descending
             </Badge>
         </div>
       </div>
 
 
       {allTags && allTags.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <h2 className="text-lg font-semibold text-foreground">Available Tags:</h2>
-            <Button variant="outline" size="sm" onClick={onManageTagsClick}>
-              <Tags className="mr-2 h-4 w-4" />
-              Manage Tags
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {allTags.map(tag => (
-              <Badge
-                key={tag}
-                variant={activeTags.has(tag) ? 'default' : 'outline'}
-                className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
-                onClick={() => onTagToggle(tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
+        <div className="mb-8 flex items-center gap-4">
+            <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold text-foreground whitespace-nowrap">Available Tags:</h2>
+                <Button variant="outline" size="sm" onClick={onManageTagsClick}>
+                <Tags className="mr-2 h-4 w-4" />
+                Manage Tags
+                </Button>
+            </div>
+            <Separator orientation="vertical" className="h-8" />
+            <div className="flex flex-wrap gap-2 flex-1">
+                {allTags.map(tag => (
+                <Badge
+                    key={tag}
+                    variant={activeTags.has(tag) ? 'default' : 'outline'}
+                    className="cursor-pointer px-3 py-1.5 text-sm hover:bg-accent/20 transition-colors rounded-md"
+                    onClick={() => onTagToggle(tag)}
+                >
+                    {tag}
+                </Badge>
+                ))}
+            </div>
         </div>
       )}
     </>
