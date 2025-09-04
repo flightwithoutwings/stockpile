@@ -45,6 +45,7 @@ export default function HomePage() {
     totalFilteredItems,
   } = useInventory();
 
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -103,8 +104,15 @@ export default function HomePage() {
     }
   };
 
-  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      setSearchTerm(localSearchTerm);
+    }
+  };
+  
+  const handleClearSearch = () => {
+      setLocalSearchTerm('');
+      setSearchTerm('');
   };
 
   const handleTagPillClick = (tagToToggle: string) => {
@@ -321,17 +329,18 @@ export default function HomePage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by title and/or author"
-            value={searchTerm}
-            onChange={handleSearchInputChange}
+            placeholder="Search by title and/or author (press Enter to search)"
+            value={localSearchTerm}
+            onChange={(e) => setLocalSearchTerm(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             className="pl-10 pr-10 w-full shadow-sm text-base"
           />
-          {searchTerm && (
+          {localSearchTerm && (
             <Button
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() => setSearchTerm('')}
+              onClick={handleClearSearch}
             >
               <X className="h-5 w-5" />
             </Button>
