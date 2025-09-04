@@ -235,57 +235,43 @@ export function useInventory() {
   const backupData = useCallback(async (type: ExportType) => {
     if (typeof window === "undefined") return;
     try {
-        const allItemKeys = await getAllItemKeys();
-        
-        let fileNameSuffix = '';
-        if (type === 'url_only') fileNameSuffix = '_url_only';
-        else if (type === 'uri_only') fileNameSuffix = '_uri_only';
-        else fileNameSuffix = '_both';
-        
-        const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}_(${exportCounter.current}).json`;
-        exportCounter.current += 1;
+      const allItemKeys = await getAllItemKeys();
+      const itemsToExport = [];
 
-        // @ts-ignore
-        const fileHandle = await window.showSaveFilePicker({
-            suggestedName: exportFileDefaultName,
-            types: [{
-                description: 'JSON files',
-                accept: { 'application/json': ['.json'] },
-            }],
-        });
-
-        // @ts-ignore
-        const writable = await fileHandle.createWritable();
-        
-        await writable.write('[\n');
-
-        for (let i = 0; i < allItemKeys.length; i++) {
-            const key = allItemKeys[i];
-            const item = await getItem(key);
-            if (item) {
-                const exportItem = { ...item };
-                if (type === 'url_only') {
-                    delete exportItem.imageURI;
-                } else if (type === 'uri_only') {
-                    delete exportItem.imageUrl;
-                }
-
-                await writable.write(JSON.stringify(exportItem, null, 2));
-                if (i < allItemKeys.length - 1) {
-                    await writable.write(',\n');
-                }
-            }
+      for (const key of allItemKeys) {
+        const item = await getItem(key);
+        if (item) {
+          const exportItem = { ...item };
+          if (type === 'url_only') {
+            delete exportItem.imageURI;
+          } else if (type === 'uri_only') {
+            delete exportItem.imageUrl;
+          }
+          itemsToExport.push(exportItem);
         }
-        
-        await writable.write('\n]');
-        await writable.close();
+      }
 
+      const jsonString = JSON.stringify(itemsToExport, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      let fileNameSuffix = '';
+      if (type === 'url_only') fileNameSuffix = '_url_only';
+      else if (type === 'uri_only') fileNameSuffix = '_uri_only';
+      else fileNameSuffix = '_both';
+      
+      const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}.json`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = exportFileDefaultName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
     } catch (error) {
-        if ((error as DOMException).name === 'AbortError') {
-           // User cancelled the save dialog, do nothing.
-        } else {
-           console.error("Failed to backup data:", error);
-        }
+      console.error("Failed to backup data:", error);
     }
   }, []);
 
