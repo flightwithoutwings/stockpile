@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys } from '@/lib/storage';
+import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys, getItem } from '@/lib/storage';
 import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
@@ -248,7 +248,6 @@ export function useInventory() {
         const itemsToExport = [];
 
         for (const key of allItemKeys) {
-            // @ts-ignore - The 'getItem' is available in storage but ts-server might not see it without a full build
             const item = await getItem(key);
             if (item) {
                 const exportItem = { ...item };
@@ -274,16 +273,31 @@ export function useInventory() {
         exportCounter.current += 1;
 
         if (window.showSaveFilePicker) {
-            const fileHandle = await window.showSaveFilePicker({
-                suggestedName: exportFileDefaultName,
-                types: [{
-                    description: 'JSON files',
-                    accept: { 'application/json': ['.json'] },
-                }],
-            });
-            const writableStream = await fileHandle.createWritable();
-            await writableStream.write(blob);
-            await writableStream.close();
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: exportFileDefaultName,
+                    types: [{
+                        description: 'JSON files',
+                        accept: { 'application/json': ['.json'] },
+                    }],
+                });
+                const writableStream = await fileHandle.createWritable();
+                await writableStream.write(blob);
+                await writableStream.close();
+            } catch (error) {
+                 if ((error as DOMException).name !== 'AbortError') {
+                    console.error("showSaveFilePicker failed, falling back to legacy download:", error);
+                    // Fallback for browsers that don't support showSaveFilePicker or if user cancels
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = exportFileDefaultName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }
+            }
         } else {
             // Fallback for browsers that don't support showSaveFilePicker
             const url = URL.createObjectURL(blob);
