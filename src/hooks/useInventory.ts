@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys } from '@/lib/storage';
+import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys, getItem } from '@/lib/storage';
 import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
