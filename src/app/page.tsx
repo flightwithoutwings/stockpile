@@ -24,8 +24,10 @@ export default function HomePage() {
     addItem,
     updateItem,
     deleteItem,
-    searchTerm,
-    setSearchTerm,
+    localSearchTerm,
+    setLocalSearchTerm,
+    commitSearch,
+    clearSearch,
     activeTags,
     toggleTagInFilter,
     backupData,
@@ -45,7 +47,6 @@ export default function HomePage() {
     totalFilteredItems,
   } = useInventory();
 
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -106,13 +107,8 @@ export default function HomePage() {
 
   const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      setSearchTerm(localSearchTerm);
+      commitSearch();
     }
-  };
-  
-  const handleClearSearch = () => {
-      setLocalSearchTerm('');
-      setSearchTerm('');
   };
 
   const handleTagPillClick = (tagToToggle: string) => {
@@ -340,7 +336,7 @@ export default function HomePage() {
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={handleClearSearch}
+              onClick={clearSearch}
             >
               <X className="h-5 w-5" />
             </Button>
@@ -521,3 +517,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

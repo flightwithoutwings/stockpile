@@ -47,6 +47,7 @@ const sanitizeRawItem = (rawItem: any): InventoryItem => {
 
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
@@ -171,6 +172,15 @@ export function useInventory() {
   const deleteItemAndImage = useCallback(async (itemId: string) => {
     await deleteItem(itemId);
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+  }, []);
+  
+  const commitSearch = useCallback(() => {
+    setSearchTerm(localSearchTerm);
+  }, [localSearchTerm]);
+
+  const clearSearch = useCallback(() => {
+    setLocalSearchTerm('');
+    setSearchTerm('');
   }, []);
 
   const toggleTagInFilter = useCallback((tagToToggle: string) => {
@@ -388,8 +398,10 @@ export function useInventory() {
     addItem,
     updateItem,
     deleteItem: deleteItemAndImage,
-    searchTerm,
-    setSearchTerm,
+    localSearchTerm,
+    setLocalSearchTerm,
+    commitSearch,
+    clearSearch,
     activeTags,
     toggleTagInFilter,
     backupData,
@@ -409,3 +421,5 @@ export function useInventory() {
     totalFilteredItems: filteredAndSortedItems.length,
   };
 }
+
+    
