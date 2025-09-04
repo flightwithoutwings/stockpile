@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import Pagination from '@/components/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 export default function HomePage() {
   const {
@@ -334,9 +335,13 @@ export default function HomePage() {
         <div className="border-t border-border flex-1 flex flex-col min-h-0">
            <div className="pt-6 pb-4 bg-background">
             {!isInitialLoading && (
-              <div>
+              <div className="flex items-center gap-4">
                 <h2 className="text-lg font-semibold text-foreground">
-                  ({totalFilteredItems}) {totalFilteredItems === 1 ? 'Item' : 'Items'}
+                  Items Total: {totalFilteredItems}
+                </h2>
+                <Separator orientation="vertical" className="h-6" />
+                <h2 className="text-lg font-semibold text-foreground">
+                  Items on this page: {inventoryItems.length}
                 </h2>
               </div>
             )}
@@ -442,3 +447,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
