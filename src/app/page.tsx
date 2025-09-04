@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import Pagination from '@/components/Pagination';
 
 export default function HomePage() {
   const {
@@ -38,6 +39,10 @@ export default function HomePage() {
     setSortOption,
     sortDirection,
     setSortDirection,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalFilteredItems,
   } = useInventory();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -404,7 +409,7 @@ export default function HomePage() {
           {!isLoading && (
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-foreground">
-                ({inventoryItems.length}) {inventoryItems.length === 1 ? 'Item' : 'Items'}
+                ({totalFilteredItems}) {totalFilteredItems === 1 ? 'Item' : 'Items'}
               </h2>
             </div>
           )}
@@ -488,6 +493,18 @@ export default function HomePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {totalPages > 1 && (
+        <footer className="sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border z-40">
+            <div className="container mx-auto px-4 py-3 flex items-center justify-center">
+                <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                />
+            </div>
+        </footer>
+      )}
 
       <footer className="py-4 text-center text-sm text-muted-foreground border-t border-border bg-secondary">
         Stockpile &copy; {new Date().getFullYear()} - Your Comic/Book Library
@@ -495,5 +512,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

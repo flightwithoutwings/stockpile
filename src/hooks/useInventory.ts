@@ -8,6 +8,7 @@ import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys, getItem
 import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
+const ITEMS_PER_PAGE = 30;
 
 type SortOption = 'createdAt' | 'title';
 type SortDirection = 'asc' | 'desc';
@@ -53,6 +54,7 @@ export function useInventory() {
   const [sortOption, setSortOption] = useState<SortOption>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const exportCounter = useRef(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const loadData = async () => {
@@ -85,6 +87,8 @@ export function useInventory() {
     };
     loadData();
   }, []);
+  
+  const resetToFirstPage = () => setCurrentPage(1);
 
   useEffect(() => {
     if (isInitialized) {
@@ -95,6 +99,10 @@ export function useInventory() {
       }
     }
   }, [sortOption, sortDirection, isInitialized]);
+  
+  useEffect(() => {
+    resetToFirstPage();
+  }, [searchTerm, activeTags, sortOption, sortDirection]);
 
   const updateAllTagsInSet = useCallback((newTags: string[]) => {
     setAllTagsSet(prevAllTags => {
@@ -212,6 +220,17 @@ export function useInventory() {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [items, searchTerm, activeTags, sortOption, sortDirection]);
+  
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredAndSortedItems.length / ITEMS_PER_PAGE);
+  }, [filteredAndSortedItems.length]);
+
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredAndSortedItems.slice(startIndex, endIndex);
+  }, [filteredAndSortedItems, currentPage]);
+
 
   const backupData = useCallback(async (type: ExportType) => {
     if (typeof window === "undefined") return;
@@ -226,8 +245,6 @@ export function useInventory() {
         const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}_(${exportCounter.current}).json`;
         exportCounter.current += 1;
 
-        // Create a WritableStream to a file.
-        // This API is not supported in Firefox and requires a polyfill for wider compatibility.
         // @ts-ignore
         const fileHandle = await window.showSaveFilePicker({
             suggestedName: exportFileDefaultName,
@@ -268,7 +285,6 @@ export function useInventory() {
            // User cancelled the save dialog, do nothing.
         } else {
            console.error("Failed to backup data:", error);
-           // Consider showing a toast message to the user here.
         }
     }
   }, []);
@@ -278,7 +294,7 @@ export function useInventory() {
       throw new Error("Invalid file type. Please select a JSON file.");
     }
 
-    await backupData('both'); // First, backup current data as a precaution.
+    await backupData('both');
 
     return new Promise<void>((resolve, reject) => {
       const reader = new FileReader();
@@ -346,7 +362,7 @@ export function useInventory() {
           if (hasTag) {
             const newTags = item.tags.map(t => t === oldTag ? trimmedNewTag : t);
             const updatedItem = { ...item, tags: newTags };
-            setItem(updatedItem); // Persist change
+            setItem(updatedItem); 
             return updatedItem;
           }
           return item;
@@ -366,7 +382,7 @@ export function useInventory() {
             if (item.tags.includes(tagToDelete)) {
               const newTags = item.tags.filter(t => t !== tagToDelete);
               const updatedItem = { ...item, tags: newTags };
-              setItem(updatedItem); // Persist change
+              setItem(updatedItem); 
               return updatedItem;
             }
             return item;
@@ -382,7 +398,7 @@ export function useInventory() {
   }, []);
 
   return {
-    items: filteredAndSortedItems,
+    items: paginatedItems,
     addItem,
     updateItem,
     deleteItem: deleteItemAndImage,
@@ -401,5 +417,9 @@ export function useInventory() {
     setSortOption,
     sortDirection,
     setSortDirection,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalFilteredItems: filteredAndSortedItems.length,
   };
 }
