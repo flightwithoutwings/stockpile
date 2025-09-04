@@ -26,7 +26,8 @@ export default function HomePage() {
     toggleTagInFilter,
     backupData,
     restoreData,
-    isLoading,
+    isLoading: isInitialLoading,
+    isPaginating,
     allTags,
     addNewGlobalTag,
     updateGlobalTag,
@@ -52,6 +53,15 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportFileInputRef = useRef<HTMLInputElement>(null);
   const [formCurrentPage, setFormCurrentPage] = useState(1);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+
+  const handlePageChange = (page: number) => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]')?.scrollTo(0, 0);
+    }
+    setCurrentPage(page);
+  };
 
   const handleAddItemClick = () => {
     setEditingItem(null);
@@ -323,7 +333,7 @@ export default function HomePage() {
         
         <div className="border-t border-border flex-1 flex flex-col min-h-0">
            <div className="pt-6 pb-4 bg-background">
-            {!isLoading && (
+            {!isInitialLoading && (
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
                   ({totalFilteredItems}) {totalFilteredItems === 1 ? 'Item' : 'Items'}
@@ -331,12 +341,12 @@ export default function HomePage() {
               </div>
             )}
           </div>
-          <ScrollArea className="flex-1 -mr-4 pr-4">
+          <ScrollArea className="flex-1 -mr-4 pr-4" ref={scrollAreaRef}>
             <InventoryGrid
               items={inventoryItems}
               onEditItem={handleEditItem}
               onDeleteItem={handleDeleteItemClick}
-              isLoading={isLoading}
+              isLoading={isInitialLoading || isPaginating}
             />
           </ScrollArea>
         </div>
@@ -420,7 +430,7 @@ export default function HomePage() {
                 <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={setCurrentPage}
+                onPageChange={handlePageChange}
                 />
             </div>
         </footer>

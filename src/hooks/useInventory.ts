@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys, getItem } from '@/lib/storage';
+import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys } from '@/lib/storage';
 import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
@@ -50,11 +50,21 @@ export function useInventory() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isPaginating, setIsPaginating] = useState(false);
   const [allTagsSet, setAllTagsSet] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState<SortOption>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const exportCounter = useRef(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPageInternal] = useState(1);
+  
+  const setCurrentPage = useCallback((page: number) => {
+    setIsPaginating(true);
+    // Simulate a brief loading period to allow the skeleton to be visible
+    setTimeout(() => {
+        setCurrentPageInternal(page);
+        setIsPaginating(false);
+    }, 100);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -88,7 +98,7 @@ export function useInventory() {
     loadData();
   }, []);
   
-  const resetToFirstPage = () => setCurrentPage(1);
+  const resetToFirstPage = () => setCurrentPageInternal(1);
 
   useEffect(() => {
     if (isInitialized) {
@@ -233,45 +243,63 @@ export function useInventory() {
 
 
   const backupData = useCallback(async (type: ExportType) => {
-    if (typeof window === "undefined") return;
     try {
-      const allItemKeys = await getAllItemKeys();
-      const itemsToExport = [];
+        const allItemKeys = await getAllItemKeys();
+        const itemsToExport = [];
 
-      for (const key of allItemKeys) {
-        const item = await getItem(key);
-        if (item) {
-          const exportItem = { ...item };
-          if (type === 'url_only') {
-            delete exportItem.imageURI;
-          } else if (type === 'uri_only') {
-            delete exportItem.imageUrl;
-          }
-          itemsToExport.push(exportItem);
+        for (const key of allItemKeys) {
+            // @ts-ignore - The 'getItem' is available in storage but ts-server might not see it without a full build
+            const item = await getItem(key);
+            if (item) {
+                const exportItem = { ...item };
+                if (type === 'url_only') {
+                    delete exportItem.imageURI;
+                } else if (type === 'uri_only') {
+                    delete exportItem.imageUrl;
+                }
+                itemsToExport.push(exportItem);
+            }
         }
-      }
 
-      const jsonString = JSON.stringify(itemsToExport, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+        const jsonString = JSON.stringify(itemsToExport, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        let fileNameSuffix = '';
+        if (type === 'url_only') fileNameSuffix = '_url_only';
+        else if (type === 'uri_only') fileNameSuffix = '_uri_only';
+        else fileNameSuffix = '_both';
+        
+        const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}_${exportCounter.current}.json`;
+        
+        exportCounter.current += 1;
 
-      let fileNameSuffix = '';
-      if (type === 'url_only') fileNameSuffix = '_url_only';
-      else if (type === 'uri_only') fileNameSuffix = '_uri_only';
-      else fileNameSuffix = '_both';
-      
-      const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}.json`;
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = exportFileDefaultName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
+        if (window.showSaveFilePicker) {
+            const fileHandle = await window.showSaveFilePicker({
+                suggestedName: exportFileDefaultName,
+                types: [{
+                    description: 'JSON files',
+                    accept: { 'application/json': ['.json'] },
+                }],
+            });
+            const writableStream = await fileHandle.createWritable();
+            await writableStream.write(blob);
+            await writableStream.close();
+        } else {
+            // Fallback for browsers that don't support showSaveFilePicker
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = exportFileDefaultName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        
     } catch (error) {
-      console.error("Failed to backup data:", error);
+        if ((error as DOMException).name !== 'AbortError') {
+            console.error("Failed to backup data:", error);
+        }
     }
   }, []);
 
@@ -395,6 +423,7 @@ setItem(updatedItem);
     backupData,
     restoreData,
     isLoading: !isInitialized,
+    isPaginating,
     allTags: allTagsArray,
     addNewGlobalTag,
     updateGlobalTag,
@@ -409,5 +438,3 @@ setItem(updatedItem);
     totalFilteredItems: filteredAndSortedItems.length,
   };
 }
-
-    
