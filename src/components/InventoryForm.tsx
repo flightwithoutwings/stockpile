@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, UploadCloud, Trash2, CalendarIcon } from 'lucide-react';
+import { PlusCircle, UploadCloud, Trash2, CalendarIcon, Pencil } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
@@ -56,6 +56,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const [newGlobalTagInput, setNewGlobalTagInput] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingURI, setIsEditingURI] = useState(false);
 
   const form = useForm<InventoryItemFormValues>({
     resolver: zodResolver(inventoryItemSchema),
@@ -156,6 +157,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       setCurrentTags(tags);
       setImagePreview(initialData?.imageUrl || initialData?.imageURI || null);
       setNewGlobalTagInput('');
+      setIsEditingURI(false);
     }
   }, [isOpen, initialData, form]);
 
@@ -165,6 +167,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       reader.onloadend = () => {
         const result = reader.result as string;
         form.setValue('imageURI', result, { shouldValidate: true });
+        setIsEditingURI(true);
       };
       reader.readAsDataURL(file);
     } else {
@@ -435,24 +438,38 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                         </div>
                       </div>
 
-                       <FormField
-                        control={form.control}
-                        name="imageURI"
-                        render={({ field }) => (
-                          <FormItem className="mt-2">
-                            <FormLabel className="text-xs">Image Data URI</FormLabel>
-                            <FormControl>
-                               <Textarea
-                                  placeholder="Generated upon image upload, or can be pasted here directly..."
-                                  {...field}
-                                  className="text-xs"
-                                  rows={3}
+                      {isEditingURI ? (
+                        <FormField
+                            control={form.control}
+                            name="imageURI"
+                            render={({ field }) => (
+                            <FormItem className="mt-2">
+                                <FormLabel className="text-xs">Image Data URI</FormLabel>
+                                <FormControl>
+                                <Textarea
+                                    placeholder="Generated upon image upload, or can be pasted here directly..."
+                                    {...field}
+                                    className="text-xs"
+                                    rows={3}
                                 />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        ) : (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            disabled={!watchImageURI}
+                            onClick={() => setIsEditingURI(true)}
+                        >
+                            <Pencil className="mr-2 h-4 w-4" /> Edit URI
+                        </Button>
                         )}
-                      />
+
 
                       <FormField
                         control={form.control}
@@ -733,5 +750,3 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
 };
 
 export default InventoryForm;
-
-    

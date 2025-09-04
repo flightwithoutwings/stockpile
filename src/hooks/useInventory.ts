@@ -4,7 +4,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
-import { getAllItems, setItem, deleteItem, clearAllData } from '@/lib/storage';
+import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys } from '@/lib/storage';
 import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
@@ -215,36 +215,60 @@ export function useInventory() {
   const backupData = useCallback(async (type: ExportType) => {
     if (typeof window === "undefined") return;
     try {
-      const itemsToBackup = await getAllItems(); 
-      
-      const itemsToExport = itemsToBackup.map(item => {
-        const exportItem = { ...item };
-        if (type === 'url_only') {
-          delete exportItem.imageURI;
-        } else if (type === 'uri_only') {
-          delete exportItem.imageUrl;
-        }
-        return exportItem;
-      });
+        const allItemKeys = await getAllItemKeys();
+        
+        let fileNameSuffix = '';
+        if (type === 'url_only') fileNameSuffix = '_url_only';
+        else if (type === 'uri_only') fileNameSuffix = '_uri_only';
+        else fileNameSuffix = '_both';
+        
+        const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}.json`;
 
-      const dataStr = JSON.stringify(itemsToExport, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      
-      let fileNameSuffix = '';
-      if (type === 'url_only') fileNameSuffix = '_url_only';
-      else if (type === 'uri_only') fileNameSuffix = '_uri_only';
-      else fileNameSuffix = '_both';
-      
-      const exportFileDefaultName = `comic_book_library_backup_${new Date().toISOString().split('T')[0]}${fileNameSuffix}.json`;
-      
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      document.body.appendChild(linkElement);
-      linkElement.click();
-      document.body.removeChild(linkElement);
+        // Create a WritableStream to a file.
+        // This API is not supported in Firefox and requires a polyfill for wider compatibility.
+        // @ts-ignore
+        const fileHandle = await window.showSaveFilePicker({
+            suggestedName: exportFileDefaultName,
+            types: [{
+                description: 'JSON files',
+                accept: { 'application/json': ['.json'] },
+            }],
+        });
+
+        // @ts-ignore
+        const writable = await fileHandle.createWritable();
+        
+        await writable.write('[\n');
+
+        for (let i = 0; i < allItemKeys.length; i++) {
+            const key = allItemKeys[i];
+            // @ts-ignore
+            const item = await getItem(key);
+            if (item) {
+                const exportItem = { ...item };
+                if (type === 'url_only') {
+                    delete exportItem.imageURI;
+                } else if (type === 'uri_only') {
+                    delete exportItem.imageUrl;
+                }
+
+                await writable.write(JSON.stringify(exportItem, null, 2));
+                if (i < allItemKeys.length - 1) {
+                    await writable.write(',\n');
+                }
+            }
+        }
+        
+        await writable.write('\n]');
+        await writable.close();
+
     } catch (error) {
-      console.error("Failed to backup data:", error);
+        if ((error as DOMException).name === 'AbortError') {
+           // User cancelled the save dialog, do nothing.
+        } else {
+           console.error("Failed to backup data:", error);
+           // Consider showing a toast message to the user here.
+        }
     }
   }, []);
 
@@ -378,5 +402,3 @@ export function useInventory() {
     setSortDirection,
   };
 }
-
-    

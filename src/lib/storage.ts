@@ -7,6 +7,13 @@ const itemStore = createStore('inventory-items', 'items');
 
 
 // == Item Functions ==
+export const getItem = async (key: IDBValidKey): Promise<InventoryItem | undefined> => {
+    return await get(key, itemStore);
+}
+
+export const getAllItemKeys = async (): Promise<IDBValidKey[]> => {
+    return await keys(itemStore);
+}
 
 export const getAllItems = async (): Promise<InventoryItem[]> => {
   try {
