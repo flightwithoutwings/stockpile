@@ -64,8 +64,8 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ item, onEdit, onD
               src={finalImageToDisplay!}
               alt={item.title}
               fill
-              objectFit="cover"
-              className="transition-transform duration-300 group-hover:scale-105 rounded-lg"
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
               data-ai-hint={getAiHint()}
               onError={handleImageError}
               unoptimized={finalImageToDisplay?.startsWith('data:')}
