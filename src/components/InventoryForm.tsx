@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
+import { WHITELISTED_IMAGE_DOMAINS } from '@/lib/image-domains';
 
 
 interface InventoryFormProps {
@@ -100,6 +101,23 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const originalNameValue = form.watch('originalName');
   const watchImageURI = form.watch('imageURI');
   const watchImageUrl = form.watch('imageUrl');
+
+  useEffect(() => {
+    if (watchImageUrl) {
+      try {
+        const url = new URL(watchImageUrl);
+        if (!WHITELISTED_IMAGE_DOMAINS.includes(url.hostname)) {
+          toast({
+            variant: 'destructive',
+            title: 'Unwhitelisted Image Domain',
+            description: `The domain "${url.hostname}" is not whitelisted. The image may not display correctly.`,
+          });
+        }
+      } catch (error) {
+        // Not a valid URL, zod validation will catch this.
+      }
+    }
+  }, [watchImageUrl, toast]);
 
   useEffect(() => {
       if (watchImageUrl) {
