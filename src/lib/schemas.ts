@@ -5,7 +5,7 @@ export const inventoryItemSchema = z.object({
   title: z.string().min(1, "Title is required").max(150, "Title must be 150 characters or less"),
   author: z.string().max(250, "Author must be 250 characters or less").optional(),
   publicationDate: z.date().optional(),
-  description: z.string().max(2000, "Description must be 2000 characters or less").optional(),
+  description: z.string().max(3000, "Description must be 3000 characters or less").optional(),
   notes: z.string().max(5000, "Notes must be 5000 characters or less").optional(),
   imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   imageURI: z.string().optional(),
