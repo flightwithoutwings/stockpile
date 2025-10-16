@@ -2,7 +2,7 @@
 import type React from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Blocks, Upload, PackagePlus, FileJson, ChevronDown } from 'lucide-react';
+import { Blocks, Upload, PackagePlus, FileJson, ChevronDown, FileCode, Edit } from 'lucide-react';
 
 export type ExportType = 'url_only' | 'uri_only' | 'both';
 
@@ -11,9 +11,10 @@ interface AppHeaderProps {
   onExportClick: (type: ExportType) => void;
   onRestoreClick: () => void;
   onImportJsonItemClick: () => void;
+  onImportHtmlItemClick: () => void;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onExportClick, onRestoreClick, onImportJsonItemClick }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onExportClick, onRestoreClick, onImportJsonItemClick, onImportHtmlItemClick }) => {
   return (
     <header className="bg-card border-b border-border shadow-sm sticky top-0 z-40">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -51,10 +52,25 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onExportClick, on
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button onClick={onAddItemClick} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <PackagePlus className="mr-2 h-4 w-4" />
-            Add New Item
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <PackagePlus className="mr-2 h-4 w-4" />
+                    Add New Item
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onImportHtmlItemClick}>
+                <FileCode className="mr-2 h-4 w-4" />
+                Import from HTML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onAddItemClick}>
+                <Edit className="mr-2 h-4 w-4" />
+                Manual Input
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
@@ -62,5 +78,3 @@ const AppHeader: React.FC<AppHeaderProps> = ({ onAddItemClick, onExportClick, on
 };
 
 export default AppHeader;
-
-    

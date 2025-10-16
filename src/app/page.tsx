@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Pagination from '@/components/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import HtmlImportDialog from '@/components/HtmlImportDialog';
 
 export default function HomePage() {
   const {
@@ -46,6 +47,7 @@ export default function HomePage() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
+  const [isHtmlImportOpen, setIsHtmlImportOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
@@ -306,6 +308,16 @@ export default function HomePage() {
     };
     reader.readAsText(file);
   };
+  
+  const handleHtmlFileImport = (file: File) => {
+    // Placeholder for HTML processing logic
+    console.log('HTML file selected:', file.name);
+    toast({
+      title: "HTML Import",
+      description: `${file.name} is ready for processing. Parsing logic not yet implemented.`,
+    });
+    setIsHtmlImportOpen(false);
+  };
 
 
   return (
@@ -315,6 +327,7 @@ export default function HomePage() {
         onExportClick={handleExportClick}
         onRestoreClick={handleRestoreClick}
         onImportJsonItemClick={handleImportJsonItemClick}
+        onImportHtmlItemClick={() => setIsHtmlImportOpen(true)}
       />
       <main className="flex-1 container mx-auto px-4 flex flex-col min-h-0">
         <div className="py-6 bg-background">
@@ -383,6 +396,12 @@ export default function HomePage() {
         currentPage={formCurrentPage}
         onPageChange={setFormCurrentPage}
       />
+      
+      <HtmlImportDialog
+        isOpen={isHtmlImportOpen}
+        onOpenChange={setIsHtmlImportOpen}
+        onFileSubmit={handleHtmlFileImport}
+      />
 
       <TagManager
         isOpen={isTagManagerOpen}
@@ -447,5 +466,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
