@@ -8,7 +8,7 @@ import InventoryForm from '@/components/InventoryForm';
 import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
 import { useInventory } from '@/hooks/useInventory';
-import type { InventoryItem } from '@/lib/types';
+import type { InventoryItem, ScrapedItemData } from '@/lib/types';
 import type { InventoryItemFormValues } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -16,6 +16,7 @@ import Pagination from '@/components/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import HtmlImportDialog from '@/components/HtmlImportDialog';
+import { parseHtmlContent } from '@/lib/html-parser';
 
 export default function HomePage() {
   const {
@@ -310,12 +311,77 @@ export default function HomePage() {
   };
   
   const handleHtmlFileImport = (file: File) => {
-    // Placeholder for HTML processing logic
-    console.log('HTML file selected:', file.name);
-    toast({
-      title: "HTML Import",
-      description: `${file.name} is ready for processing. Parsing logic not yet implemented.`,
-    });
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const htmlContent = e.target?.result as string;
+        if (!htmlContent) {
+          throw new Error('File is empty or could not be read.');
+        }
+
+        const { data, error } = parseHtmlContent(htmlContent, file.name);
+
+        if (error) {
+          throw new Error(error);
+        }
+
+        if (data) {
+          toast({
+            title: 'Content Parsed',
+            description: `Successfully extracted data for "${data.title}".`,
+          });
+          
+          let notesContent = '';
+          if (data.printLength && data.printLength !== 'Print length not found') {
+            notesContent += `Print Length: ${data.printLength}\n`;
+          }
+          if (data.fileSize && data.fileSize !== 'File size not found') {
+            notesContent += `File Size: ${data.fileSize}\n`;
+          }
+
+          const parsedDate = data.year ? new Date(data.year) : undefined;
+          const publicationDate = (parsedDate && !isNaN(parsedDate.getTime())) ? parsedDate : undefined;
+
+          // Create a temporary item object to pre-fill the form
+          const tempItem: InventoryItem = {
+            id: '', // No ID yet, it's a new item
+            title: data.title || '',
+            author: data.author || '',
+            description: data.description || '',
+            publicationDate: publicationDate,
+            imageUrl: data.imageUrl || '',
+            notes: notesContent.trim(),
+            // Empty defaults for fields not parsed
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            tags: [],
+            imageURI: '',
+            originalFileFormats: [],
+            originalName: '',
+            isOriginalNameNA: false,
+            calibredStatus: 'no',
+          };
+
+          setEditingItem(tempItem); // Use setEditingItem to pre-fill the form
+          setFormCurrentPage(1);
+          setIsFormOpen(true);
+        }
+      } catch (error: any) {
+        toast({
+          title: 'HTML Import Failed',
+          description: error.message || 'Could not parse the HTML file.',
+          variant: 'destructive',
+        });
+      }
+    };
+    reader.onerror = () => {
+      toast({
+        title: 'File Read Error',
+        description: 'An error occurred while trying to read the file.',
+        variant: 'destructive',
+      });
+    };
+    reader.readAsText(file);
     setIsHtmlImportOpen(false);
   };
 

@@ -16,3 +16,14 @@ export type InventoryItem = {
   isOriginalNameNA?: boolean;
   calibredStatus?: 'yes' | 'no' | 'na';
 };
+
+export type ScrapedItemData = {
+  title: string;
+  author: string;
+  year: string;
+  description: string;
+  imageUrl: string;
+  sourceUrl: string;
+  printLength: string;
+  fileSize: string;
+};
