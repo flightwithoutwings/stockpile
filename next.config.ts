@@ -42,6 +42,18 @@ const nextConfig: NextConfig = {
         "https://6000-firebase-studio-1746857395157.cluster-2xfkbshw5rfguuk5qupw267afs.cloudworkstations.dev",
     ],
   },
+   webpack: (config) => {
+    // Add a rule to handle pdf.worker.min.mjs
+    config.module.rules.push({
+      test: /pdf\.worker\.min\.mjs/,
+      type: "asset/resource",
+      generator: {
+        filename: "static/chunks/[name].[hash][ext]",
+      },
+    });
+
+    return config;
+  },
 };
 
 export default nextConfig;

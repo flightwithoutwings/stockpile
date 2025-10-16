@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, UploadCloud, Trash2, CalendarIcon, Pencil } from 'lucide-react';
+import { PlusCircle, UploadCloud, Trash2, CalendarIcon, Pencil, FileUp } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { format } from 'date-fns';
@@ -25,6 +25,12 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { WHITELISTED_IMAGE_DOMAINS } from '@/lib/image-domains';
+import * as pdfjs from 'pdfjs-dist';
+
+// Configure the worker
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+}
 
 
 interface InventoryFormProps {
@@ -57,6 +63,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const [newGlobalTagInput, setNewGlobalTagInput] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [isEditingURI, setIsEditingURI] = useState(false);
 
   const form = useForm<InventoryItemFormValues>({
@@ -199,6 +206,55 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       processImageFile(file);
     }
   };
+
+  const handlePdfFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || file.type !== 'application/pdf') {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please select a PDF file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      toast({ title: 'Processing PDF', description: 'Extracting cover page...' });
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+      const page = await pdf.getPage(1); // Get the first page
+
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      if (!context) {
+        throw new Error('Could not get canvas context');
+      }
+
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      form.setValue('imageURI', dataUrl, { shouldValidate: true });
+      setIsEditingURI(true);
+      toast({ title: 'Cover Extracted', description: 'PDF cover has been set as the item image.' });
+
+    } catch (error) {
+      console.error('Error processing PDF:', error);
+      toast({
+        title: 'PDF Processing Failed',
+        description: (error as Error).message || 'Could not extract cover from PDF.',
+        variant: 'destructive',
+      });
+    } finally {
+        if(pdfInputRef.current) {
+            pdfInputRef.current.value = '';
+        }
+    }
+  };
+
 
   const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -456,37 +512,56 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                         </div>
                       </div>
 
-                      {isEditingURI ? (
-                        <FormField
-                            control={form.control}
-                            name="imageURI"
-                            render={({ field }) => (
-                            <FormItem className="mt-2">
-                                <FormLabel className="text-xs">Image Data URI</FormLabel>
-                                <FormControl>
-                                <Textarea
-                                    placeholder="Generated upon image upload, or can be pasted here directly..."
-                                    {...field}
-                                    className="text-xs"
-                                    rows={3}
-                                />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        ) : (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="mt-2"
-                            disabled={!watchImageURI}
-                            onClick={() => setIsEditingURI(true)}
-                        >
-                            <Pencil className="mr-2 h-4 w-4" /> Edit URI
-                        </Button>
-                        )}
+                       <div className="mt-2 flex items-center gap-2">
+                            {isEditingURI ? (
+                               <FormField
+                                   control={form.control}
+                                   name="imageURI"
+                                   render={({ field }) => (
+                                   <FormItem className="flex-grow">
+                                       <FormLabel className="text-xs">Image Data URI</FormLabel>
+                                       <FormControl>
+                                       <Textarea
+                                           placeholder="Generated upon image upload, or can be pasted here directly..."
+                                           {...field}
+                                           className="text-xs"
+                                           rows={3}
+                                       />
+                                       </FormControl>
+                                       <FormMessage />
+                                   </FormItem>
+                                   )}
+                               />
+                            ) : (
+                                <>
+                                {watchImageURI && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setIsEditingURI(true)}
+                                    >
+                                        <Pencil className="mr-2 h-4 w-4" /> Edit URI
+                                    </Button>
+                                )}
+                                </>
+                           )}
+                           <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => pdfInputRef.current?.click()}
+                            >
+                                <FileUp className="mr-2 h-4 w-4" /> Extract Cover from PDF
+                            </Button>
+                            <input
+                                type="file"
+                                ref={pdfInputRef}
+                                onChange={handlePdfFileChange}
+                                accept=".pdf"
+                                className="hidden"
+                            />
+                        </div>
 
 
                       <FormField
