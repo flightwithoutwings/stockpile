@@ -15,7 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Pagination from '@/components/Pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import HtmlImportDialog from '@/components/HtmlImportDialog';
+import HtmlImportDialog, { type HtmlImportDialogRef } from '@/components/HtmlImportDialog';
 import { parseHtmlContent } from '@/lib/html-parser';
 
 export default function HomePage() {
@@ -58,7 +58,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportFileInputRef = useRef<HTMLInputElement>(null);
-  const htmlImportFileInputRef = useRef<HTMLInputElement>(null); // Ref for the dialog's input
+  const htmlImportDialogRef = useRef<HtmlImportDialogRef>(null);
   const [formCurrentPage, setFormCurrentPage] = useState(1);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -377,6 +377,8 @@ export default function HomePage() {
         });
       } finally {
         setIsHtmlImportOpen(false);
+        // Reset the file input in the dialog
+        htmlImportDialogRef.current?.reset();
       }
     };
     reader.onerror = () => {
@@ -471,6 +473,7 @@ export default function HomePage() {
       />
       
       <HtmlImportDialog
+        ref={htmlImportDialogRef}
         isOpen={isHtmlImportOpen}
         onOpenChange={setIsHtmlImportOpen}
         onFileSubmit={handleHtmlFileImport}

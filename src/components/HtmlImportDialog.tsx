@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,11 @@ interface HtmlImportDialogProps {
   onFileSubmit: (file: File) => void;
 }
 
-const HtmlImportDialog: React.FC<HtmlImportDialogProps> = ({ isOpen, onOpenChange, onFileSubmit }) => {
+export interface HtmlImportDialogRef {
+  reset: () => void;
+}
+
+const HtmlImportDialog = forwardRef<HtmlImportDialogRef, HtmlImportDialogProps>(({ isOpen, onOpenChange, onFileSubmit }, ref) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -25,6 +29,10 @@ const HtmlImportDialog: React.FC<HtmlImportDialogProps> = ({ isOpen, onOpenChang
       fileInputRef.current.value = '';
     }
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    reset: resetState,
+  }));
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -131,6 +139,7 @@ const HtmlImportDialog: React.FC<HtmlImportDialogProps> = ({ isOpen, onOpenChang
       </DialogContent>
     </Dialog>
   );
-};
+});
+HtmlImportDialog.displayName = 'HtmlImportDialog';
 
 export default HtmlImportDialog;
