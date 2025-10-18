@@ -8,10 +8,13 @@ import { getAllItems, setItem, deleteItem, clearAllData, getAllItemKeys, getItem
 import type { ExportType } from '@/components/AppHeader';
 
 const SORT_CONFIG_KEY = 'comicBookLibrarySortConfig';
+const SEARCH_FIELD_KEY = 'comicBookLibrarySearchField';
 const ITEMS_PER_PAGE = 30;
 
 export type SortOption = 'createdAt' | 'title';
 export type SortDirection = 'asc' | 'desc';
+export type SearchField = 'title' | 'author' | 'fileFormat' | 'originalName' | 'notes';
+
 
 const sanitizeRawItem = (rawItem: any): InventoryItem => {
   const isOriginalNameTrulyNA = typeof rawItem.isOriginalNameNA === 'boolean' ? rawItem.isOriginalNameNA : false;
@@ -54,6 +57,7 @@ export function useInventory() {
   const [allTagsSet, setAllTagsSet] = useState<Set<string>>(new Set());
   const [sortOption, setSortOption] = useState<SortOption>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [searchField, setSearchField] = useState<SearchField>('title');
   const exportCounter = useRef(1);
   const [currentPage, setCurrentPageInternal] = useState(1);
   
@@ -88,6 +92,12 @@ export function useInventory() {
           if (['createdAt', 'title'].includes(option)) setSortOption(option);
           if (['asc', 'desc'].includes(direction)) setSortDirection(direction);
         }
+        
+        const storedSearchField = localStorage.getItem(SEARCH_FIELD_KEY);
+        if (storedSearchField && ['title', 'author', 'fileFormat', 'originalName', 'notes'].includes(storedSearchField)) {
+          setSearchField(storedSearchField as SearchField);
+        }
+
 
       } catch (error) {
         console.error("Failed to load items from IndexedDB:", error);
@@ -111,8 +121,19 @@ export function useInventory() {
   }, [sortOption, sortDirection, isInitialized]);
   
   useEffect(() => {
+    if (isInitialized) {
+        try {
+            localStorage.setItem(SEARCH_FIELD_KEY, searchField);
+        } catch (error) {
+            console.error("Failed to save search field to localStorage:", error);
+        }
+    }
+  }, [searchField, isInitialized]);
+
+
+  useEffect(() => {
     resetToFirstPage();
-  }, [searchTerm, activeTags, sortOption, sortDirection]);
+  }, [searchTerm, activeTags, sortOption, sortDirection, searchField]);
 
   const updateAllTagsInSet = useCallback((newTags: string[]) => {
     setAllTagsSet(prevAllTags => {
@@ -207,15 +228,23 @@ export function useInventory() {
 
     const trimmedSearchTerm = searchTerm.trim().toLowerCase();
     if (trimmedSearchTerm) {
-      const searchKeywords = trimmedSearchTerm.split(' ').filter(term => term.trim() !== '');
-      if (searchKeywords.length > 0) {
         filtered = filtered.filter((item) => {
-          return searchKeywords.every(keyword =>
-            item.title.toLowerCase().includes(keyword) ||
-            (item.author && item.author.toLowerCase().includes(keyword))
-          );
+            const term = trimmedSearchTerm;
+            switch(searchField) {
+                case 'title':
+                    return item.title.toLowerCase().includes(term);
+                case 'author':
+                    return item.author?.toLowerCase().includes(term) ?? false;
+                case 'fileFormat':
+                    return item.originalFileFormats?.some(format => format.toLowerCase().includes(term)) ?? false;
+                case 'originalName':
+                    return item.originalName?.toLowerCase().includes(term) ?? false;
+                case 'notes':
+                    return item.notes?.toLowerCase().includes(term) ?? false;
+                default:
+                    return item.title.toLowerCase().includes(term) || (item.author && item.author.toLowerCase().includes(term));
+            }
         });
-      }
     }
 
     return filtered.sort((a, b) => {
@@ -229,7 +258,7 @@ export function useInventory() {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [items, searchTerm, activeTags, sortOption, sortDirection]);
+  }, [items, searchTerm, activeTags, sortOption, sortDirection, searchField]);
   
   const totalPages = useMemo(() => {
     return Math.ceil(filteredAndSortedItems.length / ITEMS_PER_PAGE);
@@ -446,6 +475,8 @@ setItem(updatedItem);
     setSortOption,
     sortDirection,
     setSortDirection,
+    searchField,
+    setSearchField,
     currentPage,
     setCurrentPage,
     totalPages,

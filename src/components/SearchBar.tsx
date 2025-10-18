@@ -6,12 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Search, Tags, ArrowUp, ArrowDown, History, CaseSensitive, X } from 'lucide-react';
-import type { SortDirection, SortOption } from '@/hooks/useInventory';
+import { Search, Tags, ArrowUp, ArrowDown, History, CaseSensitive, X, ChevronDown } from 'lucide-react';
+import type { SortDirection, SortOption, SearchField } from '@/hooks/useInventory';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+
 
 interface SearchBarProps {
   initialSearchTerm: string;
   onSearch: (term: string) => void;
+  searchField: SearchField;
+  onSearchFieldChange: (field: SearchField) => void;
   sortOption: SortOption;
   onSortOptionChange: (option: SortOption) => void;
   sortDirection: SortDirection;
@@ -22,9 +27,19 @@ interface SearchBarProps {
   onManageTagsClick: () => void;
 }
 
+const searchFieldLabels: Record<SearchField, string> = {
+  title: 'Title',
+  author: 'Author',
+  fileFormat: 'File Format',
+  originalName: 'Original File Name',
+  notes: 'Notes',
+};
+
 const SearchBar: React.FC<SearchBarProps> = ({
   initialSearchTerm,
   onSearch,
+  searchField,
+  onSearchFieldChange,
   sortOption,
   onSortOptionChange,
   sortDirection,
@@ -54,27 +69,46 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <>
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="relative flex-grow max-w-lg">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search by title and/or author (press Enter to search)"
-            value={localSearchTerm}
-            onChange={(e) => setLocalSearchTerm(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            className="pl-10 pr-10 w-full shadow-sm text-base"
-          />
-          {localSearchTerm && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={handleClearSearch}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          )}
+        <div className="relative flex-grow max-w-lg flex items-center">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                type="text"
+                placeholder={`Search by ${searchFieldLabels[searchField]}...`}
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="pl-10 pr-10 w-full shadow-sm text-base"
+            />
+            {localSearchTerm && (
+                <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={handleClearSearch}
+                >
+                <X className="h-5 w-5" />
+                </Button>
+            )}
         </div>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="whitespace-nowrap">
+                Search In: <span className="font-semibold ml-2">{searchFieldLabels[searchField]}</span>
+                <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+                {(Object.keys(searchFieldLabels) as SearchField[]).map((field) => (
+                    <DropdownMenuItem
+                        key={field}
+                        onClick={() => onSearchFieldChange(field)}
+                        className={cn(searchField === field && 'bg-accent')}
+                    >
+                        {searchFieldLabels[field]}
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
         
         <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-semibold text-foreground whitespace-nowrap">Sort By:</span>

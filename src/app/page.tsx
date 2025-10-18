@@ -44,6 +44,8 @@ export default function HomePage() {
     totalPages,
     totalFilteredItems,
     searchTerm,
+    searchField,
+    setSearchField,
   } = useInventory();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -400,6 +402,8 @@ export default function HomePage() {
           <SearchBar
             initialSearchTerm={searchTerm}
             onSearch={setSearchTerm}
+            searchField={searchField}
+            onSearchFieldChange={setSearchField}
             sortOption={sortOption}
             onSortOptionChange={setSortOption}
             sortDirection={sortDirection}
@@ -472,6 +476,7 @@ export default function HomePage() {
       <TagManager
         isOpen={isTagManagerOpen}
         onOpenChange={setIsTagManagerOpen}
+
         allTags={allTags}
         onAddTag={addNewGlobalTag}
         onUpdateTag={updateGlobalTag}
