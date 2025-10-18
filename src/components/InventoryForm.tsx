@@ -46,7 +46,7 @@ interface InventoryFormProps {
 
 const TOTAL_PAGES = 5;
 
-const fixedFormatOptions = ["AZW3", "AZW", "EPUB", "KOBO", "MOBI", "OTHER"];
+const fixedFormatOptions = ["AZW", "AZW3", "EPUB", "KOBO", "MOBI", "PDF", "OTHER"];
 
 const InventoryForm: React.FC<InventoryFormProps> = ({
   isOpen,
