@@ -19,6 +19,13 @@ const HtmlImportDialog: React.FC<HtmlImportDialogProps> = ({ isOpen, onOpenChang
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  const resetState = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const processFile = useCallback((file: File) => {
     if (file.type === 'text/html') {
       setSelectedFile(file);
@@ -56,7 +63,6 @@ const HtmlImportDialog: React.FC<HtmlImportDialogProps> = ({ isOpen, onOpenChang
   const handleSubmit = () => {
     if (selectedFile) {
         onFileSubmit(selectedFile);
-        onOpenChange(false);
     } else {
         toast({
             title: "No file selected",
@@ -68,7 +74,7 @@ const HtmlImportDialog: React.FC<HtmlImportDialogProps> = ({ isOpen, onOpenChang
 
   const handleClose = (open: boolean) => {
     if (!open) {
-      setSelectedFile(null);
+      resetState();
     }
     onOpenChange(open);
   }
