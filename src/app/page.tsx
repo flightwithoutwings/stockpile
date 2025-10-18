@@ -58,6 +58,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportFileInputRef = useRef<HTMLInputElement>(null);
+  const htmlImportFileInputRef = useRef<HTMLInputElement>(null); // Ref for the dialog's input
   const [formCurrentPage, setFormCurrentPage] = useState(1);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -374,6 +375,8 @@ export default function HomePage() {
           description: error.message || 'Could not parse the HTML file.',
           variant: 'destructive',
         });
+      } finally {
+        setIsHtmlImportOpen(false);
       }
     };
     reader.onerror = () => {
@@ -382,9 +385,9 @@ export default function HomePage() {
         description: 'An error occurred while trying to read the file.',
         variant: 'destructive',
       });
+      setIsHtmlImportOpen(false);
     };
     reader.readAsText(file);
-    setIsHtmlImportOpen(false);
   };
 
 
