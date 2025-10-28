@@ -26,6 +26,8 @@ import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { WHITELISTED_IMAGE_DOMAINS } from '@/lib/image-domains';
 import * as pdfjs from 'pdfjs-dist';
+import JSZip from 'jszip';
+
 
 // Configure the worker
 if (typeof window !== 'undefined') {
@@ -64,6 +66,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const epubInputRef = useRef<HTMLInputElement>(null);
   const [isEditingURI, setIsEditingURI] = useState(false);
 
   const form = useForm<InventoryItemFormValues>({
@@ -251,6 +254,88 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
     } finally {
         if(pdfInputRef.current) {
             pdfInputRef.current.value = '';
+        }
+    }
+  };
+
+  const handleEpubFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.name.endsWith('.epub')) {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please select an ePub file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+        toast({ title: 'Processing ePub', description: 'Reading ePub file...' });
+        const zip = await JSZip.loadAsync(file);
+
+        // 1. Find the root file path from container.xml
+        const containerFile = zip.file('META-INF/container.xml');
+        if (!containerFile) throw new Error('META-INF/container.xml not found.');
+        
+        const containerXmlText = await containerFile.async('text');
+        const parser = new DOMParser();
+        const containerDoc = parser.parseFromString(containerXmlText, 'application/xml');
+        const rootFilePath = containerDoc.getElementsByTagName('rootfile')[0]?.getAttribute('full-path');
+        if (!rootFilePath) throw new Error('Root file path not found in container.xml.');
+
+        // 2. Read the root file (.opf) to find the cover image
+        const contentFile = zip.file(rootFilePath);
+        if (!contentFile) throw new Error(`Content file not found at: ${rootFilePath}`);
+        const contentXmlText = await contentFile.async('text');
+        const contentDoc = parser.parseFromString(contentXmlText, 'application/xml');
+        
+        // Find cover image from meta tag first (ePub 2)
+        let coverImageId = contentDoc.querySelector('meta[name="cover"]')?.getAttribute('content');
+        let coverItem;
+        
+        if (coverImageId) {
+            coverItem = contentDoc.getElementById(coverImageId);
+        } else {
+            // Fallback for ePub 3 (cover-image property in item)
+            coverItem = contentDoc.querySelector('item[properties="cover-image"]');
+        }
+
+        if (!coverItem) throw new Error('Cover image reference not found in content file.');
+
+        const coverHref = coverItem.getAttribute('href');
+        if (!coverHref) throw new Error('Cover image href not found.');
+
+        // The href might be relative to the content file, so we need to construct the full path
+        const contentPathParts = rootFilePath.split('/');
+        contentPathParts.pop(); // remove filename to get directory
+        const coverFullPath = (contentPathParts.length > 0 ? contentPathParts.join('/') + '/' : '') + coverHref;
+
+        // 3. Extract the image file
+        const coverFile = zip.file(coverFullPath);
+        if (!coverFile) throw new Error(`Cover image file not found at: ${coverFullPath}`);
+
+        const coverBlob = await coverFile.async('blob');
+        
+        // 4. Convert blob to data URI and set it in the form
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const result = reader.result as string;
+            form.setValue('imageURI', result, { shouldValidate: true });
+            setIsEditingURI(true);
+            toast({ title: 'Cover Extracted', description: 'ePub cover has been set as the item image.' });
+        };
+        reader.readAsDataURL(coverBlob);
+
+    } catch (error) {
+        console.error('Error processing ePub:', error);
+        toast({
+            title: 'ePub Processing Failed',
+            description: (error as Error).message || 'Could not extract cover from ePub file.',
+            variant: 'destructive',
+        });
+    } finally {
+        if(epubInputRef.current) {
+            epubInputRef.current.value = '';
         }
     }
   };
@@ -552,13 +637,28 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                                 size="sm"
                                 onClick={() => pdfInputRef.current?.click()}
                             >
-                                <FileUp className="mr-2 h-4 w-4" /> Extract Cover from PDF
+                                <FileUp className="mr-2 h-4 w-4" /> Extract from PDF
                             </Button>
                             <input
                                 type="file"
                                 ref={pdfInputRef}
                                 onChange={handlePdfFileChange}
                                 accept=".pdf"
+                                className="hidden"
+                            />
+                             <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => epubInputRef.current?.click()}
+                            >
+                                <FileUp className="mr-2 h-4 w-4" /> Extract from ePub
+                            </Button>
+                            <input
+                                type="file"
+                                ref={epubInputRef}
+                                onChange={handleEpubFileChange}
+                                accept=".epub"
                                 className="hidden"
                             />
                         </div>
