@@ -13,7 +13,7 @@ const ITEMS_PER_PAGE = 30;
 
 export type SortOption = 'createdAt' | 'title';
 export type SortDirection = 'asc' | 'desc';
-export type SearchField = 'title' | 'author' | 'fileFormat' | 'originalName' | 'notes';
+export type SearchField = 'title' | 'author' | 'fileFormat' | 'originalName' | 'notes' | 'bundleName';
 
 
 const sanitizeRawItem = (rawItem: any): InventoryItem => {
@@ -36,6 +36,7 @@ const sanitizeRawItem = (rawItem: any): InventoryItem => {
     publicationDate: publicationDateValue,
     description: typeof rawItem.description === 'string' ? rawItem.description : '',
     notes: typeof rawItem.notes === 'string' ? rawItem.notes : '',
+    bundleName: typeof rawItem.bundleName === 'string' ? rawItem.bundleName : '',
     imageUrl: typeof rawItem.imageUrl === 'string' ? rawItem.imageUrl : '',
     imageURI: typeof rawItem.imageURI === 'string' ? rawItem.imageURI : '',
     tags: Array.isArray(rawItem.tags) ? rawItem.tags.map(t => String(t).toLowerCase()) : [],
@@ -94,7 +95,7 @@ export function useInventory() {
         }
         
         const storedSearchField = localStorage.getItem(SEARCH_FIELD_KEY);
-        if (storedSearchField && ['title', 'author', 'fileFormat', 'originalName', 'notes'].includes(storedSearchField)) {
+        if (storedSearchField && ['title', 'author', 'fileFormat', 'originalName', 'notes', 'bundleName'].includes(storedSearchField)) {
           setSearchField(storedSearchField as SearchField);
         }
 
@@ -151,6 +152,7 @@ export function useInventory() {
       publicationDate: formData.publicationDate,
       description: formData.description || '',
       notes: formData.notes || '',
+      bundleName: formData.bundleName || '',
       imageUrl: formData.imageUrl || '',
       imageURI: formData.imageURI || '',
       tags: (formData.tags || []).map(t => t.toLowerCase()),
@@ -178,6 +180,7 @@ export function useInventory() {
             publicationDate: formData.publicationDate,
             description: formData.description || '',
             notes: formData.notes || '',
+            bundleName: formData.bundleName || '',
             imageUrl: formData.imageUrl || '',
             imageURI: formData.imageURI || '',
             tags: (formData.tags || []).map(t => t.toLowerCase()),
@@ -241,6 +244,8 @@ export function useInventory() {
                     return item.originalName?.toLowerCase().includes(term) ?? false;
                 case 'notes':
                     return item.notes?.toLowerCase().includes(term) ?? false;
+                case 'bundleName':
+                    return item.bundleName?.toLowerCase().includes(term) ?? false;
                 default:
                     return item.title.toLowerCase().includes(term) || (item.author && item.author.toLowerCase().includes(term));
             }

@@ -33,6 +33,7 @@ const searchFieldLabels: Record<SearchField, string> = {
   fileFormat: 'File Format',
   originalName: 'Original File Name',
   notes: 'Notes',
+  bundleName: 'Bundle Name',
 };
 
 const SearchBar: React.FC<SearchBarProps> = ({

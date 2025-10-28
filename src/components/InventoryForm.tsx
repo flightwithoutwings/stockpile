@@ -78,6 +78,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           publicationDate: initialData.publicationDate,
           description: initialData.description || '',
           notes: initialData.notes || '',
+          bundleName: initialData.bundleName || '',
           imageUrl: initialData.imageUrl || '',
           imageURI: initialData.imageURI || '',
           tags: initialData.tags || [],
@@ -92,6 +93,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
           publicationDate: undefined,
           description: '',
           notes: '',
+          bundleName: '',
           imageUrl: '',
           imageURI: '',
           tags: [],
@@ -159,6 +161,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               publicationDate: initialData.publicationDate,
               description: initialData.description || '',
               notes: initialData.notes || '',
+              bundleName: initialData.bundleName || '',
               imageUrl: initialData.imageUrl || '',
               imageURI: initialData.imageURI || '',
               tags: tags,
@@ -173,6 +176,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
               publicationDate: undefined,
               description: '',
               notes: '',
+              bundleName: '',
               imageUrl: '',
               imageURI: '',
               tags: [],
@@ -398,6 +402,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
         author: values.author || '',
         description: values.description || '',
         notes: values.notes || '',
+        bundleName: values.bundleName || '',
         tags: currentTags,
         originalFileFormats: (values.originalFileFormats || []).filter(format => format && format.trim() !== '')
     };
@@ -420,7 +425,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
     } else if (currentPage === 4) {
         isValid = await form.trigger(['tags']);
     } else if (currentPage === 5) {
-        isValid = await form.trigger(['notes']);
+        isValid = await form.trigger(['notes', 'bundleName']);
     }
 
     if (!isValid && currentPage < TOTAL_PAGES) {
@@ -896,11 +901,25 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
                   <>
                     <FormField
                       control={form.control}
+                      name="bundleName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bundle Name (if applicable)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Humble Bundle October 2023" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Notes (Optional)</FormLabel>                          <FormControl>
-                            <Textarea placeholder="Add personal notes or reminders about this item..." {...field} rows={10} />
+                          <FormLabel>Notes (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Add personal notes or reminders about this item..." {...field} rows={8} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

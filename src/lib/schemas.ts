@@ -7,6 +7,7 @@ export const inventoryItemSchema = z.object({
   publicationDate: z.date().optional(),
   description: z.string().max(3000, "Description must be 3000 characters or less").optional(),
   notes: z.string().max(5000, "Notes must be 5000 characters or less").optional(),
+  bundleName: z.string().max(150, "Bundle name must be 150 characters or less").optional(),
   imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   imageURI: z.string().optional(),
   tags: z.array(z.string().min(1, "Tag cannot be empty").max(25, "Tag must be 25 characters or less")).max(10, "Maximum of 10 tags allowed").optional().default([]),
